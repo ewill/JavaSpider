@@ -69,8 +69,6 @@ public final class ConfigUtil {
             
         }
         
-        System.out.println(bean.toString());
-        
         return bean;
     }
     

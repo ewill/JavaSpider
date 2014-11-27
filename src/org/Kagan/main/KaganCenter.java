@@ -4,7 +4,6 @@ import java.util.Scanner;
 
 import org.Kagan.core.ConfigUtil;
 import org.Kagan.core.Configure;
-import org.Kagan.core.Queue;
 import org.Kagan.core.SpiderRobot;
 import org.Kagan.util.Db;
 import org.Kagan.util.T;
@@ -15,7 +14,8 @@ public class KaganCenter {
     private static Scanner scanf = new Scanner(System.in);
     
     public static final void KaganMessageHeader() {
-        T.println("\n### Kagan Message ###\n");
+        T.println("\n### Kagan Message ###");
+        T.println("================================================================================");
     }
     
     public static final String PrintMenu() {
@@ -40,29 +40,36 @@ public class KaganCenter {
             conf = ConfigUtil.loadKaganXml("KaganConfig.xml");
             
             Db.Init(ConfigUtil.loadProperties("druid.properties"));
-//            SpiderRobot.Init(conf, new Queue(conf));
+            SpiderRobot.Init(conf);
             
             while (!(command = PrintMenu()).equals("6")) {
-                int choice = Integer.valueOf(command);
-                if (choice == 1 || choice == 2 || choice == 3) {
-                    KaganMessageHeader();
+                int choice;
+                try {
+                    choice = Integer.valueOf(command);
+                } catch (Exception e) {
+                    choice = -1;
                 }
+                
+                KaganMessageHeader();
                 switch (choice) {
-                case 1:
-                    T.println(conf.toString());
-                    break;
-                case 2:
-                    T.println(String.format("Total Records : %d\n", spider.CountRecords()));
-                    break;
-                case 3:
-                    T.println(String.format("Total Repeat Data : \n%s\n", spider.FormatRepeatData(spider.CheckRepeatData())));
-                    break;
-                case 4:
-                    spider.Start();
-                    break;
-                case 5:
-                    SpiderRobot.Shutdown();
-                    break;
+                    case 1:
+                        T.println(conf.toString());
+                        break;
+                    case 2:
+                        T.println(String.format("Total Records : %d\n", spider.CountRecords()));
+                        break;
+                    case 3:
+                        T.println(String.format("Total Repeat Data : \n%s\n", spider.FormatRepeatData(spider.CheckRepeatData())));
+                        break;
+                    case 4:
+                        spider.Start();
+                        break;
+                    case 5:
+                        SpiderRobot.Shutdown();
+                        break;
+                    default:
+                        T.println("Invalid Command");
+                        break;
                 }
             }
             

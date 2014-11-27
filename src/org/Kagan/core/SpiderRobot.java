@@ -20,9 +20,9 @@ public class SpiderRobot {
     private static ISearchHandler searchHandler;
     private static IWriteDataHandler writeHandler;
     
-    public static final void Init(Configure c, IQueue q) {
+    public static final void Init(Configure c) {
         conf = c;
-        queue = q;
+//        queue = q;
     }
     
     public final SpiderRobot Start() {
