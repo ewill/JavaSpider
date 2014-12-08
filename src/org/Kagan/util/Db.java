@@ -31,13 +31,13 @@ public final class Db {
         return data;
     }
     
-    public static final void Init(Properties p) throws Exception {
+    public synchronized static final void Init(Properties p) throws Exception {
         if (ds == null) {
             ds = (DruidDataSource)DruidDataSourceFactory.createDataSource(p);
         }
     }
     
-    public static final DruidPooledConnection getConnection() throws SQLException {
+    public synchronized static final DruidPooledConnection getConnection() throws SQLException {
         return ds != null ? ds.getConnection() : null;
     }
     

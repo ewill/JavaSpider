@@ -2,19 +2,34 @@
 <KaganRoot>
     
     <!-- 键值存放表 -->
-    <KeyTable name="" />
+    <!-- 索引表结构
+        id
+        HashKey
+    -->
+    <IndexTable name="索引表名称" />
     
     <!-- 数据存放表 -->
-    <DataTable name="" />
+    <!-- 网页数据表结构
+         id
+         Title
+         Link
+         PageContent
+         ComeFrom
+    -->
+    <DataTable name="数据表名称" />
     
     <!-- 写入数据的线程数 -->
     <WriteDbThreads value="5" />
     
-    <!-- 数据队列大小 -->
+    <!-- 网页信息数据队列大小 -->
+    <DequeSize value="200" />
+    
+    <!-- 传输数据队列大小 -->
     <QueueSize value="100" />
 
     <!-- 配置需要抓取信息的网站 -->
     <WebsiteList>
+        
         <website name="163">
             <DailySize>100</DailySize>
             <url>http://www.163.com</url>

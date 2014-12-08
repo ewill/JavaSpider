@@ -2,11 +2,10 @@ package org.Kagan.main;
 
 import java.util.Scanner;
 
-import org.Kagan.core.ConfigUtil;
-import org.Kagan.core.Configure;
+import org.Kagan.config.Configure;
 import org.Kagan.core.SpiderRobot;
+import org.Kagan.util.ConfigKit;
 import org.Kagan.util.Db;
-import org.Kagan.util.T;
 
 public class KaganCenter {
     
@@ -14,22 +13,22 @@ public class KaganCenter {
     private static Scanner scanf = new Scanner(System.in);
     
     public static final void KaganMessageHeader() {
-        T.println("\n### Kagan Message ###");
-        T.println("================================================================================");
+        System.out.println("\n### Kagan Message ###");
+        System.out.println("================================================================================");
     }
     
     public static final String PrintMenu() {
-        T.println("--------------------------------------------------------------------------------");
-        T.println("| Welcome to Kagan Spider Robot                                                |");
-        T.println("| -----------------------------------------------------------------------------|");
-        T.println("| 1. See Configure                                                             |");
-        T.println("| 2. Count Records                                                             |");
-        T.println("| 3. Check Repeat Data                                                         |");
-        T.println("| 4. Spider Robot Start Working                                                |");
-        T.println("| 5. Spider Robot Stop Working                                                 |");
-        T.println("| 6. Quit                                                                      |");
-        T.println("--------------------------------------------------------------------------------");
-        T.print("~# ");
+        System.out.println("--------------------------------------------------------------------------------");
+        System.out.println("| Welcome to Kagan Spider Robot                                                |");
+        System.out.println("| -----------------------------------------------------------------------------|");
+        System.out.println("| 1. See Configure                                                             |");
+        System.out.println("| 2. Count Records                                                             |");
+        System.out.println("| 3. Check Repeat Data                                                         |");
+        System.out.println("| 4. Spider Robot Start Working                                                |");
+        System.out.println("| 5. Spider Robot Stop Working                                                 |");
+        System.out.println("| 6. Quit                                                                      |");
+        System.out.println("--------------------------------------------------------------------------------");
+        System.out.print("~# ");
         return scanf.nextLine();
     }
     
@@ -37,10 +36,10 @@ public class KaganCenter {
         try {
             String command;
             SpiderRobot spider = new SpiderRobot();
-            conf = ConfigUtil.loadKaganXml("KaganConfig.xml");
+            conf = ConfigKit.loadKaganXml("KaganConfig.xml");
             
-            Db.Init(ConfigUtil.loadProperties("druid.properties"));
-            SpiderRobot.Init(conf);
+            Db.Init(ConfigKit.loadProperties("druid.properties"));
+            SpiderRobot.init(conf);
             
             while (!(command = PrintMenu()).equals("6")) {
                 int choice;
@@ -53,22 +52,22 @@ public class KaganCenter {
                 KaganMessageHeader();
                 switch (choice) {
                     case 1:
-                        T.println(conf.toString());
+                        System.out.println(conf.toString());
                         break;
                     case 2:
-                        T.println(String.format("Total Records : %d\n", spider.CountRecords()));
+                        System.out.println(String.format("Total Records : %d\n", spider.countRecords()));
                         break;
                     case 3:
-                        T.println(String.format("Total Repeat Data : \n%s\n", spider.FormatRepeatData(spider.CheckRepeatData())));
+                        System.out.println(String.format("Total Repeat Data : \n%s\n", spider.formatRepeatData(spider.checkRepeatData())));
                         break;
                     case 4:
-                        spider.Start();
+                        spider.start();
                         break;
                     case 5:
-                        SpiderRobot.Shutdown();
+                        SpiderRobot.shutdown();
                         break;
                     default:
-                        T.println("Invalid Command");
+                        System.out.println("Invalid Command");
                         break;
                 }
             }
@@ -77,7 +76,7 @@ public class KaganCenter {
             e.printStackTrace();
         } finally {
             Db.Shutdown();
-            SpiderRobot.Shutdown();
+            SpiderRobot.shutdown();
             scanf.close();
         }
     }
