@@ -40,20 +40,20 @@ public static final String RootPath = ConfigKit.class.getClassLoader().getResour
         if (rootList.getLength() > 0) {
             Element root = (Element)rootList.item(0);
             
-            // KeyTable
-            bean.setIndexTable(((Element)root.getElementsByTagName("IndexTable").item(0)).getAttribute("name"));
+            // IndexTable
+            Configure.indexTable = ((Element)root.getElementsByTagName("IndexTable").item(0)).getAttribute("name");
             
             // DataTable
-            bean.setDataTable(((Element)root.getElementsByTagName("DataTable").item(0)).getAttribute("name"));
+            Configure.dataTable = ((Element)root.getElementsByTagName("DataTable").item(0)).getAttribute("name");
             
             // WriteDbThreads
-            bean.setWriteDbThreads(Integer.valueOf(((Element)root.getElementsByTagName("WriteDbThreads").item(0)).getAttribute("value")));
+            Configure.writeDbThreads = Integer.valueOf(((Element)root.getElementsByTagName("WriteDbThreads").item(0)).getAttribute("value"));
             
             // QueueSize
-            bean.setQueueSize(Integer.valueOf(((Element)root.getElementsByTagName("QueueSize").item(0)).getAttribute("value")));
+            Configure.queueSize = Integer.valueOf(((Element)root.getElementsByTagName("QueueSize").item(0)).getAttribute("value"));
             
             // DequeSize
-            bean.setDequeSize(Integer.valueOf(((Element)root.getElementsByTagName("DequeSize").item(0)).getAttribute("value")));
+            Configure.dequeSize = Integer.valueOf(((Element)root.getElementsByTagName("DequeSize").item(0)).getAttribute("value"));
             
             // WebsiteList
             NodeList websiteList = root.getElementsByTagName("WebsiteList");
@@ -65,7 +65,7 @@ public static final String RootPath = ConfigKit.class.getClassLoader().getResour
                     String name = website.getAttribute("name");
                     wc.setWebsiteName(name);
                     wc.setUrl(website.getElementsByTagName("url").item(0).getFirstChild().getNodeValue());
-                    wc.setRegex(Pattern.compile(website.getElementsByTagName("regex").item(0).getFirstChild().getNodeValue()));
+                    wc.setRegex(Pattern.compile(String.format("(%s)", website.getElementsByTagName("regex").item(0).getFirstChild().getNodeValue())));
                     wc.setDailySize(Integer.valueOf(website.getElementsByTagName("DailySize").item(0).getFirstChild().getNodeValue()));
                     bean.setWebsites(name, wc);
                 }

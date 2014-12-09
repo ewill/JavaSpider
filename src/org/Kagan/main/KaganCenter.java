@@ -33,13 +33,12 @@ public class KaganCenter {
     }
     
     public static void main(String[] args) {
+        SpiderRobot spider = null;
         try {
             String command;
-            SpiderRobot spider = new SpiderRobot();
             conf = ConfigKit.loadKaganXml("KaganConfig.xml");
-            
+            spider = new SpiderRobot(conf);
             Db.Init(ConfigKit.loadProperties("druid.properties"));
-            SpiderRobot.init(conf);
             
             while (!(command = PrintMenu()).equals("6")) {
                 int choice;
@@ -58,13 +57,20 @@ public class KaganCenter {
                         System.out.println(String.format("Total Records : %d\n", spider.countRecords()));
                         break;
                     case 3:
-                        System.out.println(String.format("Total Repeat Data : \n%s\n", spider.formatRepeatData(spider.checkRepeatData())));
+                        String str = spider.formatRepeatData(spider.checkRepeatData());
+                        if (str != null) {
+                            System.out.println(String.format("Total Repeat Data : \n%s\n", str));
+                        } else {
+                            System.out.println("Nothing\n");
+                        }
                         break;
                     case 4:
+                        System.out.println("Starting...");
                         spider.start();
                         break;
                     case 5:
-                        SpiderRobot.shutdown();
+                        System.out.println("Stopping...");
+                        spider.shutdown();
                         break;
                     default:
                         System.out.println("Invalid Command");
@@ -76,7 +82,7 @@ public class KaganCenter {
             e.printStackTrace();
         } finally {
             Db.Shutdown();
-            SpiderRobot.shutdown();
+            spider.shutdown();
             scanf.close();
         }
     }

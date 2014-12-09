@@ -216,10 +216,19 @@ public final class Db {
     
     public static final void close(DruidPooledConnection conn, PreparedStatement pstmt, ResultSet rs) {
         try {
-            rs.close();
-            pstmt.close();
-            conn.close();
+            if (rs != null) {
+                rs.close();
+            }
+            
+            if (pstmt != null) {
+                pstmt.close();
+            }
+            
+            if (conn != null) {
+                conn.close();
+            }
         } catch (Exception e) {
+            e.printStackTrace();
         }
     }
     
