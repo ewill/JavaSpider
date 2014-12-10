@@ -5,53 +5,14 @@ import java.util.Map;
 
 
 public final class Configure {
-    private String indexTable;
-    private String dataTable;
-    private int queueSize;
-    private int dequeSize;
-    private int writeDbThreads;
+    public static String indexTable;
+    public static String dataTable;
+    public static int queueSize;
+    public static int dequeSize;
+    public static int readThreads;
+    public static int writeDbThreads;
     private Map<String, WebsiteConfigure> websites = new LinkedHashMap<String, WebsiteConfigure>();
     
-    public String getIndexTable() {
-        return indexTable;
-    }
-
-    public void setIndexTable(String keyTable) {
-        this.indexTable = keyTable;
-    }
-
-    public String getDataTable() {
-        return dataTable;
-    }
-
-    public void setDataTable(String dataTable) {
-        this.dataTable = dataTable;
-    }
-
-    public int getQueueSize() {
-        return queueSize;
-    }
-
-    public void setQueueSize(int queueSize) {
-        this.queueSize = queueSize;
-    }
-
-    public int getDequeSize() {
-        return dequeSize;
-    }
-
-    public void setDequeSize(int dequeSize) {
-        this.dequeSize = dequeSize;
-    }
-
-    public int getWriteDbThreads() {
-        return writeDbThreads;
-    }
-
-    public void setWriteDbThreads(int writeDbThreads) {
-        this.writeDbThreads = writeDbThreads;
-    }
-
     public Map<String, WebsiteConfigure> getWebsites() {
         return websites;
     }

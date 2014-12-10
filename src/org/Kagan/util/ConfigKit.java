@@ -46,6 +46,9 @@ public static final String RootPath = ConfigKit.class.getClassLoader().getResour
             // DataTable
             Configure.dataTable = ((Element)root.getElementsByTagName("DataTable").item(0)).getAttribute("name");
             
+            // ReadThreads
+            Configure.readThreads = Integer.valueOf(((Element)root.getElementsByTagName("ReadThreads").item(0)).getAttribute("value"));
+            
             // WriteDbThreads
             Configure.writeDbThreads = Integer.valueOf(((Element)root.getElementsByTagName("WriteDbThreads").item(0)).getAttribute("value"));
             

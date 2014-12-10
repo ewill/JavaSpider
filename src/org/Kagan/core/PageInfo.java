@@ -7,7 +7,7 @@ public class PageInfo {
     private String link;
     private String hashKey;
     private String pageContent;
-    private int comeFrom;
+    private String comeFrom;
     
     public String getHashKey() {
         return hashKey;
@@ -49,11 +49,11 @@ public class PageInfo {
         this.pageContent = pageContent;
     }
     
-    public int getComeFrom() {
+    public String getComeFrom() {
         return comeFrom;
     }
     
-    public void setComeFrom(int comeFrom) {
+    public void setComeFrom(String comeFrom) {
         this.comeFrom = comeFrom;
     }
     

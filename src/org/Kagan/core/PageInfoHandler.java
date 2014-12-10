@@ -12,6 +12,7 @@ public class PageInfoHandler implements IPageInfo {
         pageInfo.setTitle(doc.title());
         pageInfo.setLink(url);
         pageInfo.setHashKey(hashKey);
+        pageInfo.setComeFrom("jobcn");
         return pageInfo;
     }
     

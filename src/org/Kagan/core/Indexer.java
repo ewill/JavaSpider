@@ -1,7 +1,6 @@
 package org.Kagan.core;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
 import org.Kagan.config.Configure;
@@ -26,79 +26,85 @@ public class Indexer implements Runnable {
     
     private IPageInfo handler;
     private WebsiteConfigure wc;
+    private final Thread[] readThreads;
     private BlockingDeque<String> deque;
     private BlockingQueue<PageInfo> queue;
-    private volatile static boolean closed = true;
+    private volatile static boolean closed = false;
+    private static final int THREAD_SLEEP_TIME = 500;
     
     public Indexer(WebsiteConfigure wc, BlockingDeque<String> deque, BlockingQueue<PageInfo> queue, IPageInfo handler) {
-        this.wc    = wc;
-        this.deque = deque;
-        this.queue = queue;
+        this.wc      = wc;
+        this.queue   = queue;
+        this.deque   = deque;
         this.handler = handler;
+        this.readThreads = new Thread[Configure.readThreads];
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("Deque Size : %d", deque.size());
     }
     
     public void shutdown() {
-        if (closed) { return; }
         closed = true;
     }
     
     @Override
     public void run() {
         try {
-            if (closed) {
-                closed = false;
-                indexPage();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+            indexPage();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
     
-    private void indexPage() throws IOException, InterruptedException {
+    private void indexPage() throws InterruptedException {
         String[] hashKeys;
-        String url = wc.getUrl();
         Map<String, String> map;
-        boolean first = true;
         
-        do {
+        for (int i = 0; i < readThreads.length; i++) {
+            readThreads[i] = new Thread(new IndexHandler(deque, queue, handler));
+            readThreads[i].start();
+        }
+        
+        Document doc = parseHtml(wc.getUrl());
+        while (!closed) {
             
-            Document doc = parseHtml(url);
-            
-            if (!first) {
-                // Get page info and then add in queue
-                queue.put(getPageInfo(StringKit.sha1(url), url, doc));
+            if (doc == null) {
+                doc = parseHtml(wc.getUrl());
             } else {
-                first = false;
-            }
-            
-            map = splitUrl(doc.html());
-            hashKeys = getValidHashKey(map.keySet());
-            if (null != hashKeys) {
-                for (String k : hashKeys) {
-                    deque.putFirst(map.get(k));
+                map = splitUrl(doc.html());
+                hashKeys = getValidHashKey(map.keySet());
+                if (hashKeys != null) {
+                    for (int i = 1; i < hashKeys.length; i++) {
+                        deque.putFirst(map.get(hashKeys[i]));
+                    }
+                    addHashKeyToDb(hashKeys);
+                } else {
+                    doc = parseHtml(wc.getUrl());
+                    continue;
                 }
-                addHashKeyToDb(hashKeys);
-            }
+                
+                String url = map.get(hashKeys[0]);
+                if (url != null && (doc = parseHtml(url)) != null) {
+                    // Get page info and then add in queue
+                    queue.put(getPageInfo(StringKit.sha1(url), url, doc));
+                }
+                
+                Thread.sleep(THREAD_SLEEP_TIME);
+            } // end if
             
-            map = null;
-            
-            try {
-                url = deque.takeLast();
-            } catch (InterruptedException e) {
-                first = true;
-                url = wc.getUrl();
-                System.out.println("Set url to: " + wc.getUrl());
-                Thread.currentThread().interrupt();
-            }
-            
-        } while (!closed);
+        } // end while
         
     }
     
-    private Document parseHtml(String url) throws MalformedURLException, IOException {
-        Document doc = Jsoup.connect(url).timeout(10000).get();
+    public static Document parseHtml(String url) {
+        Document doc = null;
+        try {
+            doc = Jsoup.connect(url).timeout(10000).get();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return doc;
     }
     
@@ -174,6 +180,45 @@ public class Indexer implements Runnable {
         }
         
         return keySet.toArray(new String[keySet.size()]);
+    }
+    
+    static class IndexHandler implements Runnable {
+        
+        private IPageInfo handler;
+        private BlockingDeque<String> deque;
+        private BlockingQueue<PageInfo> queue;
+        private volatile static boolean closed = false;
+        
+        public IndexHandler(BlockingDeque<String> deque, BlockingQueue<PageInfo> queue, IPageInfo handler) {
+            this.deque   = deque;
+            this.queue   = queue;
+            this.handler = handler;
+        }
+        
+        private PageInfo getPageInfo(String hashKey, String url, Document doc) {
+            return handler.getPageInfo(hashKey, url, doc);
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (!closed) {
+                    String url = deque.pollLast(5L, TimeUnit.SECONDS);
+                    Document doc = parseHtml(url);
+                    if (doc != null) {
+                        queue.put(getPageInfo(StringKit.sha1(url), url, doc));
+                        Thread.sleep(THREAD_SLEEP_TIME);
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        
+        public void shutdown() {
+            closed = true;
+        }
+        
     }
 
 }

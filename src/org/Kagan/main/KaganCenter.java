@@ -26,7 +26,8 @@ public class KaganCenter {
         System.out.println("| 3. Check Repeat Data                                                         |");
         System.out.println("| 4. Spider Robot Start Working                                                |");
         System.out.println("| 5. Spider Robot Stop Working                                                 |");
-        System.out.println("| 6. Quit                                                                      |");
+        System.out.println("| 6. Check Running Status                                                      |");
+        System.out.println("| 7. Quit                                                                      |");
         System.out.println("--------------------------------------------------------------------------------");
         System.out.print("~# ");
         return scanf.nextLine();
@@ -40,7 +41,7 @@ public class KaganCenter {
             spider = new SpiderRobot(conf);
             Db.Init(ConfigKit.loadProperties("druid.properties"));
             
-            while (!(command = PrintMenu()).equals("6")) {
+            while (!(command = PrintMenu()).equals("7")) {
                 int choice;
                 try {
                     choice = Integer.valueOf(command);
@@ -65,12 +66,15 @@ public class KaganCenter {
                         }
                         break;
                     case 4:
-                        System.out.println("Starting...");
+                        System.out.println("Starting...\n");
                         spider.start();
                         break;
                     case 5:
-                        System.out.println("Stopping...");
+                        System.out.println("Stopping...\n");
                         spider.shutdown();
+                        break;
+                    case 6:
+                        System.out.println(spider);
                         break;
                     default:
                         System.out.println("Invalid Command");
