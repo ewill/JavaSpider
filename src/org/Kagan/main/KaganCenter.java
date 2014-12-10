@@ -85,7 +85,7 @@ public class KaganCenter {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            Db.Shutdown();
+            Db.shutdown();
             spider.shutdown();
             scanf.close();
         }

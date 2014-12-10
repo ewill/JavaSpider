@@ -232,9 +232,10 @@ public final class Db {
         }
     }
     
-    public static final void Shutdown() {
+    public static final void shutdown() {
         if (ds != null) {
             ds.close();
+            ds = null;
         }
     }
 }

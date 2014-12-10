@@ -3,7 +3,7 @@ package org.Kagan.core;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,11 +24,12 @@ import com.alibaba.druid.pool.DruidPooledConnection;
 
 public class Indexer implements Runnable {
     
-    private IPageInfo handler;
-    private WebsiteConfigure wc;
+    private final IPageInfo handler;
+    private final WebsiteConfigure wc;
     private final Thread[] readThreads;
-    private BlockingDeque<String> deque;
-    private BlockingQueue<PageInfo> queue;
+    private final BlockingDeque<String> deque;
+    private final BlockingQueue<PageInfo> queue;
+    private final IndexHandler[] indexHandlers;
     private volatile static boolean closed = false;
     private static final int THREAD_SLEEP_TIME = 500;
     
@@ -38,6 +39,7 @@ public class Indexer implements Runnable {
         this.deque   = deque;
         this.handler = handler;
         this.readThreads = new Thread[Configure.readThreads];
+        this.indexHandlers = new IndexHandler[Configure.readThreads];
     }
     
     @Override
@@ -47,6 +49,9 @@ public class Indexer implements Runnable {
     
     public void shutdown() {
         closed = true;
+        for (IndexHandler idxHandler : indexHandlers) {
+            idxHandler.shutdown();
+        }
     }
     
     @Override
@@ -63,13 +68,13 @@ public class Indexer implements Runnable {
         Map<String, String> map;
         
         for (int i = 0; i < readThreads.length; i++) {
-            readThreads[i] = new Thread(new IndexHandler(deque, queue, handler));
+            indexHandlers[i] = new IndexHandler(deque, queue, handler);
+            readThreads[i] = new Thread(indexHandlers[i]);
             readThreads[i].start();
         }
         
         Document doc = parseHtml(wc.getUrl());
         while (!closed) {
-            
             if (doc == null) {
                 doc = parseHtml(wc.getUrl());
             } else {
@@ -82,6 +87,7 @@ public class Indexer implements Runnable {
                     addHashKeyToDb(hashKeys);
                 } else {
                     doc = parseHtml(wc.getUrl());
+                    Thread.sleep(THREAD_SLEEP_TIME);
                     continue;
                 }
                 
@@ -92,16 +98,16 @@ public class Indexer implements Runnable {
                 }
                 
                 Thread.sleep(THREAD_SLEEP_TIME);
-            } // end if
+            }
             
-        } // end while
+        }
         
     }
     
     public static Document parseHtml(String url) {
         Document doc = null;
         try {
-            doc = Jsoup.connect(url).timeout(10000).get();
+            doc = Jsoup.connect(url).timeout(5000).get();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -110,7 +116,7 @@ public class Indexer implements Runnable {
     
     private Map<String, String> splitUrl(String html) {
         String url;
-        Map<String, String> map = new HashMap<String, String>();
+        Map<String, String> map = new LinkedHashMap<String, String>();
         Matcher matcher = wc.getRegex().matcher(html);
         while (matcher.find()) {
             url = matcher.group(1);
@@ -179,7 +185,7 @@ public class Indexer implements Runnable {
             return null;
         }
         
-        return keySet.toArray(new String[keySet.size()]);
+        return keySet.size() > 0 ? keySet.toArray(new String[keySet.size()]) : null;
     }
     
     static class IndexHandler implements Runnable {
@@ -202,10 +208,10 @@ public class Indexer implements Runnable {
         @Override
         public void run() {
             try {
+                Document doc;
                 while (!closed) {
                     String url = deque.pollLast(5L, TimeUnit.SECONDS);
-                    Document doc = parseHtml(url);
-                    if (doc != null) {
+                    if (url != null && (doc = parseHtml(url)) != null) {
                         queue.put(getPageInfo(StringKit.sha1(url), url, doc));
                         Thread.sleep(THREAD_SLEEP_TIME);
                     }

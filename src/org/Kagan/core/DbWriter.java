@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.Kagan.config.Configure;
 import org.Kagan.util.Db;
@@ -12,7 +13,7 @@ import com.alibaba.druid.pool.DruidPooledConnection;
 
 public class DbWriter implements Runnable {
     
-    private volatile static boolean closed = true;
+    private volatile static boolean closed = false;
     private static final short BUFF_SIZE = 10;
     private static final int THREAD_SLEEP_TIME = 500;
     
@@ -31,16 +32,10 @@ public class DbWriter implements Runnable {
     
     @Override
     public void run() {
-        if (closed) {
-            closed = false;
-            try {
-                writeData();
-            } catch (InterruptedException e) {
-                System.out.println("Thread sleep...");
-                System.out.println("Before " + Thread.currentThread().isInterrupted());
-                Thread.currentThread().interrupt();
-                System.out.println("After " + Thread.currentThread().isInterrupted());
-            }
+        try {
+            writeData();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
     
@@ -50,7 +45,13 @@ public class DbWriter implements Runnable {
                 writeToDb();
             }
             
-            buff.add(queue.take());
+            PageInfo pageInfo = queue.poll(5L, TimeUnit.SECONDS);
+            if (pageInfo != null) {
+                buff.add(pageInfo);
+            } else if (buff.size() > 0) {
+                writeToDb();
+            }
+            
             Thread.sleep(THREAD_SLEEP_TIME);
         }
         
@@ -71,7 +72,7 @@ public class DbWriter implements Runnable {
             for (PageInfo pageInfo : buff) {
                 pstmt.setString(1, pageInfo.getTitle());
                 pstmt.setString(2, pageInfo.getLink());
-                pstmt.setString(3, pageInfo.getPageContent().length() > 0 ? pageInfo.getPageContent() : "");
+                pstmt.setString(3, pageInfo.getPageContent() != null ? pageInfo.getPageContent() : "");
                 pstmt.setString(4, pageInfo.getComeFrom());
                 pstmt.addBatch();
             }
@@ -90,7 +91,6 @@ public class DbWriter implements Runnable {
     }
     
     public void shutdown() {
-        if (closed) { return; }
         closed = true;
     }
 }

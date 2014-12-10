@@ -19,8 +19,8 @@ public class SpiderRobot {
     private final Thread[] dbWriterThreads;
     private final Indexer[] indexers;
     private final DbWriter[] dbWriters;
-    private static boolean closed = true;
     private final BlockingQueue<PageInfo> queue;
+    private volatile static boolean closed = true;
     
     public SpiderRobot(Configure conf) {
         this.conf = conf;
@@ -70,15 +70,13 @@ public class SpiderRobot {
     }
     
     public final void shutdown() {
-        if (closed) { return; }
-        closed = true;
         for (Indexer idxer : indexers) {
             idxer.shutdown();
         }
-        
         for (DbWriter writer : dbWriters) {
             writer.shutdown();
         }
+        closed = true;
     }
     
     public final int countRecords() {
