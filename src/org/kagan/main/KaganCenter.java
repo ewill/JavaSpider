@@ -1,11 +1,11 @@
-package org.Kagan.main;
+package org.kagan.main;
 
 import java.util.Scanner;
 
-import org.Kagan.config.Configure;
-import org.Kagan.core.SpiderRobot;
-import org.Kagan.util.ConfigKit;
-import org.Kagan.util.Db;
+import org.kagan.config.Configure;
+import org.kagan.core.SpiderRobot;
+import org.kagan.util.ConfigKit;
+import org.kagan.util.Db;
 
 public class KaganCenter {
     
@@ -29,7 +29,7 @@ public class KaganCenter {
         System.out.println("| 6. Check Running Status                                                      |");
         System.out.println("| 7. Quit                                                                      |");
         System.out.println("--------------------------------------------------------------------------------");
-        System.out.print("~# ");
+        System.out.print("# ");
         return scanf.nextLine();
     }
     
@@ -85,9 +85,10 @@ public class KaganCenter {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            Db.shutdown();
-            spider.shutdown();
             scanf.close();
+            spider.shutdown();
+            Db.shutdown();
+            System.out.println("Exit Kagan System");
         }
     }
 }

@@ -1,4 +1,4 @@
-package org.Kagan.util;
+package org.kagan.util;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

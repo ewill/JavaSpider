@@ -1,4 +1,4 @@
-package org.Kagan.core;
+package org.kagan.core;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,10 +7,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.Kagan.config.Configure;
-import org.Kagan.config.WebsiteConfigure;
-import org.Kagan.util.Db;
-import org.Kagan.util.StringKit;
+import org.kagan.config.Configure;
+import org.kagan.config.WebsiteConfigure;
+import org.kagan.handler.PageInfoHandler;
+import org.kagan.util.Db;
+import org.kagan.util.StringKit;
 
 public class SpiderRobot {
     
@@ -77,6 +78,22 @@ public class SpiderRobot {
             writer.shutdown();
         }
         closed = true;
+        
+        boolean indexerThreadFlag;
+        boolean dbWriterThreadFlag;
+        while (true) {
+            indexerThreadFlag  = true;
+            dbWriterThreadFlag = true;
+            for (int i = 0; i < indexerThreads.length; i++) {
+                indexerThreadFlag = indexerThreadFlag && indexerThreads[i].isAlive();
+            }
+            for (int i = 0; i < dbWriterThreads.length; i++) {
+                dbWriterThreadFlag = dbWriterThreadFlag && dbWriterThreads[i].isAlive();
+            }
+            if (!indexerThreadFlag && !dbWriterThreadFlag) {
+                break;
+            }
+        }
     }
     
     public final int countRecords() {

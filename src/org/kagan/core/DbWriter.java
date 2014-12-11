@@ -1,4 +1,4 @@
-package org.Kagan.core;
+package org.kagan.core;
 
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.Kagan.config.Configure;
-import org.Kagan.util.Db;
+import org.kagan.config.Configure;
+import org.kagan.util.Db;
 
 import com.alibaba.druid.pool.DruidPooledConnection;
 
@@ -92,5 +92,12 @@ public class DbWriter implements Runnable {
     
     public void shutdown() {
         closed = true;
+        while (true) {
+            if (buff.size() == 0) {
+                break;
+            } else {
+                writeToDb();
+            }
+        }
     }
 }

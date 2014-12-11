@@ -1,4 +1,4 @@
-package org.Kagan.util;
+package org.kagan.util;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.Kagan.interfaces.IResultSet;
+import org.kagan.interfaces.IResultSet;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidDataSourceFactory;

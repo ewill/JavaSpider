@@ -1,4 +1,4 @@
-package org.Kagan.config;
+package org.kagan.config;
 
 import java.util.regex.Pattern;
 

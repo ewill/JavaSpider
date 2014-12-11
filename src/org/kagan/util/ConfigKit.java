@@ -1,4 +1,4 @@
-package org.Kagan.util;
+package org.kagan.util;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,8 +11,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.Kagan.config.Configure;
-import org.Kagan.config.WebsiteConfigure;
+import org.kagan.config.Configure;
+import org.kagan.config.WebsiteConfigure;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
