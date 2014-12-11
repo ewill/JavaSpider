@@ -15,25 +15,28 @@
          Link
          PageContent
          ComeFrom
+         PostTime
     -->
     <DataTable name="数据表名称" />
+    
+    <!-- 读取数据的线程数 -->
+    <ReadThreads value="5" />
     
     <!-- 写入数据的线程数 -->
     <WriteDbThreads value="5" />
     
     <!-- 网页信息数据队列大小 -->
-    <DequeSize value="200" />
+    <DequeSize value="100" />
     
     <!-- 传输数据队列大小 -->
-    <QueueSize value="100" />
+    <QueueSize value="200" />
 
     <!-- 配置需要抓取信息的网站 -->
     <WebsiteList>
-        
         <website name="163">
             <DailySize>100</DailySize>
             <url>http://www.163.com</url>
-            <regex>http://(news|tech|sports)\\.163\\.com/(.*)\\.(html)$</regex>
+            <regex>http://(lady|war|money|home|bbs\.news|edu|news|tech|sports)\.163\.com/\d+/\d+/\d+/([a-zA-Z0-9]+)\.(html)</regex>
         </website>
     </WebsiteList>
 </KaganRoot>
