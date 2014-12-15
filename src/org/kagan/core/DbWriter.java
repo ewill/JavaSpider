@@ -1,5 +1,6 @@
 package org.kagan.core;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,13 +68,14 @@ public class DbWriter implements Runnable {
         
         try {
             conn = Db.getConnection();
-            pstmt = conn.prepareStatement(String.format("INSERT INTO %s ( title, link, pageContent, comeFrom ) VALUES ( ?, ?, ?, ? ) ", Configure.dataTable));
+            pstmt = conn.prepareStatement(String.format("INSERT INTO %s ( title, link, pageContent, comeFrom, postTime ) VALUES ( ?, ?, ?, ?, ? ) ", Configure.dataTable));
             
             for (PageInfo pageInfo : buff) {
                 pstmt.setString(1, pageInfo.getTitle());
                 pstmt.setString(2, pageInfo.getLink());
                 pstmt.setString(3, pageInfo.getPageContent() != null ? pageInfo.getPageContent() : "");
                 pstmt.setString(4, pageInfo.getComeFrom());
+                pstmt.setDate(5, new Date(pageInfo.getPostTime().getTime()));
                 pstmt.addBatch();
             }
             

@@ -1,6 +1,6 @@
 package org.kagan.core;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
 public class PageInfo {
     
@@ -10,13 +10,13 @@ public class PageInfo {
     private String hashKey;
     private String pageContent;
     private String comeFrom;
-    private Timestamp postTime;
+    private Date postTime = new Date();
     
-    public Timestamp getPostTime() {
+    public Date getPostTime() {
         return postTime;
     }
 
-    public void setPostTime(Timestamp postTime) {
+    public void setPostTime(Date postTime) {
         this.postTime = postTime;
     }
 
