@@ -20,7 +20,7 @@ public class PageInfoHandler implements IPageInfo {
         PageInfo pageInfo = new PageInfo();
         Matcher matcher = DATE_PATTERN.matcher(doc.body().html());
         try {
-            while (matcher.find()) {
+            if (matcher.find()) {
                 pageInfo.setPostTime(format.parse(matcher.group(1).replaceAll("年|月|日", "-")));
             }
         } catch (ParseException e) {
