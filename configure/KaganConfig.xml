@@ -6,7 +6,7 @@
         id
         HashKey
     -->
-    <IndexTable name="索引表名称" />
+    <IndexTable name="" />
     
     <!-- 数据存放表 -->
     <!-- 网页数据表结构
@@ -17,7 +17,7 @@
          ComeFrom
          PostTime
     -->
-    <DataTable name="数据表名称" />
+    <DataTable name="" />
     
     <!-- 读取数据的线程数 -->
     <ReadThreads value="5" />
@@ -30,13 +30,28 @@
     
     <!-- 传输数据队列大小 -->
     <QueueSize value="200" />
+    
+    <!-- 过滤HTML内容 -->
 
     <!-- 配置需要抓取信息的网站 -->
     <WebsiteList>
+        <website name="sun0769">
+            <DailySize>100</DailySize>
+            <url>http://news.sun0769.com/</url>
+            <regex>http://news.sun0769.com/(.*?\.shtml)</regex>
+            <handler>org.kagan.handler.PageInfoHandler</handler>
+        </website>
+        <website name="jobcn">
+            <DailySize>100</DailySize>
+            <url>http://info.jobcn.com/</url>
+            <regex>http://info\.jobcn\.com/article/([0-9]+)</regex>
+            <handler>org.kagan.handler.PageInfoHandler</handler>
+        </website>
         <website name="163">
             <DailySize>100</DailySize>
             <url>http://www.163.com</url>
             <regex>http://(lady|war|money|home|bbs\.news|edu|news|tech|sports)\.163\.com/\d+/\d+/\d+/([a-zA-Z0-9]+)\.(html)</regex>
+            <handler>org.kagan.handler.PageInfoHandler</handler>
         </website>
     </WebsiteList>
 </KaganRoot>
