@@ -31,7 +31,7 @@ public class Indexer implements Runnable {
     private final BlockingQueue<PageInfo> queue;
     private final IndexHandler[] indexHandlers;
     private volatile static boolean closed = false;
-    private static final int THREAD_SLEEP_TIME = 500;
+    private static final int THREAD_SLEEP_TIME = 800;
     private static final int RECATCH_SLEEP_TIME = 5000;
     
     public Indexer(WebsiteConfigure wc, BlockingDeque<String> deque, BlockingQueue<PageInfo> queue, IPageInfo handler) {

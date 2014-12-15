@@ -72,10 +72,14 @@ public class SpiderRobot {
     
     public final void shutdown() {
         for (Indexer idxer : indexers) {
-            idxer.shutdown();
+            if (idxer != null) {
+                idxer.shutdown();
+            }
         }
         for (DbWriter writer : dbWriters) {
-            writer.shutdown();
+            if (writer != null) {
+                writer.shutdown();
+            }
         }
         closed = true;
         
@@ -85,12 +89,16 @@ public class SpiderRobot {
             indexerThreadFlag  = true;
             dbWriterThreadFlag = true;
             for (int i = 0; i < indexerThreads.length; i++) {
-                indexerThreadFlag = indexerThreadFlag && indexerThreads[i].isAlive();
+                if (indexerThreads[i] != null) {
+                    indexerThreadFlag = indexerThreadFlag && indexerThreads[i].isAlive();
+                }
             }
             for (int i = 0; i < dbWriterThreads.length; i++) {
-                dbWriterThreadFlag = dbWriterThreadFlag && dbWriterThreads[i].isAlive();
+                if (dbWriterThreads[i] != null) {
+                    dbWriterThreadFlag = dbWriterThreadFlag && dbWriterThreads[i].isAlive();
+                }
             }
-            if (!indexerThreadFlag && !dbWriterThreadFlag) {
+            if (!indexerThreadFlag && !dbWriterThreadFlag || indexerThreads[0] == null) {
                 break;
             }
         }
