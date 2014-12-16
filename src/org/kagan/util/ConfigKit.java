@@ -13,6 +13,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.kagan.config.Configure;
 import org.kagan.config.WebsiteConfigure;
+import org.kagan.interfaces.IPageInfo;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -26,6 +27,17 @@ public static final String RootPath = ConfigKit.class.getClassLoader().getResour
         Properties properties = new Properties();
         properties.load(new FileInputStream(new File(path)));
         return properties;
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static final Class<? extends IPageInfo> loadClass(String className) {
+        Class clazz = null;
+        try {
+            clazz = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return clazz;
     }
     
     public static final Configure loadKaganXml(String fileName) throws ParserConfigurationException, SAXException, IOException {
@@ -69,7 +81,17 @@ public static final String RootPath = ConfigKit.class.getClassLoader().getResour
                     wc.setWebsiteName(name);
                     wc.setUrl(website.getElementsByTagName("url").item(0).getFirstChild().getNodeValue());
                     wc.setRegex(Pattern.compile(String.format("(%s)", website.getElementsByTagName("regex").item(0).getFirstChild().getNodeValue())));
-                    wc.setDailySize(Integer.valueOf(website.getElementsByTagName("DailySize").item(0).getFirstChild().getNodeValue()));
+                    
+                    Class<? extends IPageInfo> clazz = ConfigKit.loadClass(website.getElementsByTagName("handler").item(0).getFirstChild().getNodeValue());
+                    
+                    try {
+                        wc.setHandler(clazz.newInstance());
+                    } catch (InstantiationException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                    
                     bean.setWebsites(name, wc);
                 }
             }

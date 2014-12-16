@@ -2,20 +2,22 @@ package org.kagan.config;
 
 import java.util.regex.Pattern;
 
+import org.kagan.interfaces.IPageInfo;
+
 public final class WebsiteConfigure {
-    private int dailySize;
-    private String websiteName;
     private String url;
     private Pattern regex;
+    private String websiteName;
+    private IPageInfo handler;
     
-    public int getDailySize() {
-        return dailySize;
+    public IPageInfo getHandler() {
+        return handler;
     }
-    
-    public void setDailySize(int dailySize) {
-        this.dailySize = dailySize;
+
+    public void setHandler(IPageInfo handler) {
+        this.handler = handler;
     }
-    
+
     public String getWebsiteName() {
         return websiteName;
     }
@@ -42,12 +44,12 @@ public final class WebsiteConfigure {
 
     @Override
     public String toString() {
-        return String.format("%s\nWebsite Name : %s\n   DailySize : %d\n         Url : %s\n       Regex : %s\n",
+        return String.format("%s\nWebsite Name : %s\n         Url : %s\n       Regex : %s\n     Handler : %s\n",
             "--------------------------------------------------------------------------------",
             websiteName,
-            dailySize,
             url,
-            regex.toString()
+            regex.toString(),
+            handler.getClass().getName()
         );
     }
     
