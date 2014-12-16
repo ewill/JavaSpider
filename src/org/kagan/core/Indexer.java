@@ -3,6 +3,7 @@ package org.kagan.core;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,14 +32,14 @@ public class Indexer implements Runnable {
     private final BlockingQueue<PageInfo> queue;
     private final IndexHandler[] indexHandlers;
     private volatile static boolean closed = false;
-    private static final int THREAD_SLEEP_TIME = 500;
+    private static final int THREAD_SLEEP_TIME  = 1000;
     private static final int RECATCH_SLEEP_TIME = 5000;
     
-    public Indexer(WebsiteConfigure wc, BlockingDeque<String> deque, BlockingQueue<PageInfo> queue, IPageInfo handler) {
+    public Indexer(WebsiteConfigure wc, BlockingDeque<String> deque, BlockingQueue<PageInfo> queue) {
         this.wc      = wc;
         this.queue   = queue;
         this.deque   = deque;
-        this.handler = handler;
+        this.handler = wc.getHandler();
         this.readThreads = new Thread[Configure.readThreads];
         this.indexHandlers = new IndexHandler[Configure.readThreads];
     }
@@ -106,7 +107,7 @@ public class Indexer implements Runnable {
                 String url = map.get(hashKeys[0]);
                 if (url != null && (doc = parseHtml(url)) != null) {
                     // Get page info and then add in queue
-                    PageInfo pageInfo = getPageInfo(wc.getWebsiteName(), StringKit.sha1(url), url, doc);
+                    PageInfo pageInfo = getPageInfo(wc.getWebsiteName(), StringKit.sha1(url), url, doc, handler);
                     if (!StringKit.isEmpty(pageInfo.getTitle())) {
                         queue.put(pageInfo);
                     }
@@ -122,9 +123,9 @@ public class Indexer implements Runnable {
     public static Document parseHtml(String url) {
         Document doc = null;
         try {
-            doc = Jsoup.connect(url).timeout(5000).get();
+            doc = Jsoup.connect(url).timeout(6000).get();
         } catch (IOException e) {
-            System.out.println(String.format("Parse %s time out", url));
+            System.out.println(String.format("Parse %s time out %s", url, new Date()));
         }
         return doc;
     }
@@ -140,7 +141,7 @@ public class Indexer implements Runnable {
         return map;
     }
     
-    private PageInfo getPageInfo(String websiteName, String hashKey, String url, Document doc) {
+    public static PageInfo getPageInfo(String websiteName, String hashKey, String url, Document doc, IPageInfo handler) {
         PageInfo pageInfo = handler.getPageInfo(doc);
         pageInfo.setLink(url);
         pageInfo.setHashKey(hashKey);
@@ -222,14 +223,6 @@ public class Indexer implements Runnable {
             this.handler = handler;
         }
         
-        private PageInfo getPageInfo(String websiteName, String hashKey, String url, Document doc) {
-            PageInfo pageInfo = handler.getPageInfo(doc);
-            pageInfo.setLink(url);
-            pageInfo.setHashKey(hashKey);
-            pageInfo.setComeFrom(websiteName);
-            return pageInfo;
-        }
-
         @Override
         public void run() {
             try {
@@ -237,7 +230,7 @@ public class Indexer implements Runnable {
                 while (!closed) {
                     String url = deque.pollLast(5L, TimeUnit.SECONDS);
                     if (url != null && (doc = parseHtml(url)) != null) {
-                        PageInfo pageInfo = getPageInfo(wc.getWebsiteName(), StringKit.sha1(url), url, doc);
+                        PageInfo pageInfo = getPageInfo(wc.getWebsiteName(), StringKit.sha1(url), url, doc, handler);
                         if (!StringKit.isEmpty(pageInfo.getTitle())) {
                             queue.put(pageInfo);
                         }

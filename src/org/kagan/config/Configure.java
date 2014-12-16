@@ -27,7 +27,7 @@ public final class Configure {
         for (Map.Entry<String, WebsiteConfigure> entry : websites.entrySet()) {
             sb.append(entry.getValue().toString());
         }
-        return String.format("Kagan System Configure:\n\nIndexTable : %s\nDataTable  : %s\nDequeSize  : %d\nQueueSize  : %d\nW-Threads  : %d\n\nWebsite List Below\n%s",
+        return String.format("\nKagan System Configure:\nIndexTable : %s\nDataTable  : %s\nDequeSize  : %d\nQueueSize  : %d\nW-Threads  : %d\n\nWebsite List Below\n%s",
             indexTable,
             dataTable,
             dequeSize,

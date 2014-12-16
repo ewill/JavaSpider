@@ -9,7 +9,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.kagan.config.Configure;
 import org.kagan.config.WebsiteConfigure;
-import org.kagan.handler.PageInfoHandler;
 import org.kagan.util.Db;
 import org.kagan.util.StringKit;
 
@@ -54,8 +53,7 @@ public class SpiderRobot {
         for (Map.Entry<String, WebsiteConfigure> entry : conf.getWebsites().entrySet()) {
             indexers[i] = new Indexer(entry.getValue(),
                 new LinkedBlockingDeque<String>(Configure.dequeSize),
-                queue,
-                new PageInfoHandler()
+                queue
             );
             indexerThreads[i] = new Thread(indexers[i]);
             indexerThreads[i++].start();
@@ -86,18 +84,22 @@ public class SpiderRobot {
         boolean indexerThreadFlag;
         boolean dbWriterThreadFlag;
         while (true) {
+            
+            if (indexerThreads[0] == null || dbWriterThreads[0] == null) {
+                break;
+            }
+            
             indexerThreadFlag  = true;
             dbWriterThreadFlag = true;
+            
             for (int i = 0; i < indexerThreads.length; i++) {
-                if (indexerThreads[i] != null) {
-                    indexerThreadFlag = indexerThreadFlag && indexerThreads[i].isAlive();
-                }
+                indexerThreadFlag = indexerThreadFlag && indexerThreads[i].isAlive();
             }
+            
             for (int i = 0; i < dbWriterThreads.length; i++) {
-                if (dbWriterThreads[i] != null) {
-                    dbWriterThreadFlag = dbWriterThreadFlag && dbWriterThreads[i].isAlive();
-                }
+                dbWriterThreadFlag = dbWriterThreadFlag && dbWriterThreads[i].isAlive();
             }
+            
             if (!indexerThreadFlag && !dbWriterThreadFlag || indexerThreads[0] == null) {
                 break;
             }

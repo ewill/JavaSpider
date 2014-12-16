@@ -16,7 +16,7 @@ public class DbWriter implements Runnable {
     
     private volatile static boolean closed = false;
     private static final short BUFF_SIZE = 10;
-    private static final int THREAD_SLEEP_TIME = 500;
+    private static final int THREAD_SLEEP_TIME = 1000;
     
     private final List<PageInfo> buff;
     private final BlockingQueue<PageInfo> queue;
