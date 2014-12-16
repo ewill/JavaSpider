@@ -16,11 +16,7 @@ public class DbWriter implements Runnable {
     
     private volatile static boolean closed = false;
     private static final short BUFF_SIZE = 10;
-<<<<<<< HEAD
-    private static final int THREAD_SLEEP_TIME = 800;
-=======
     private static final int THREAD_SLEEP_TIME = 1000;
->>>>>>> branch 'master' of https://github.com/ewill/KaganSpider.git
     
     private final List<PageInfo> buff;
     private final BlockingQueue<PageInfo> queue;

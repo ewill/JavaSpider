@@ -6,7 +6,7 @@
         id
         HashKey
     -->
-    <IndexTable name="jobcn90_other..tpagekeys" />
+    <IndexTable name="" />
     
     <!-- 数据存放表 -->
     <!-- 网页数据表结构
@@ -17,7 +17,7 @@
          ComeFrom
          PostTime
     -->
-    <DataTable name="jobcn90_other..tpagedata" />
+    <DataTable name="" />
     
     <!-- 每个网站读取数据的线程数 -->
     <ReadThreads value="1" />
