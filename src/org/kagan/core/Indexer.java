@@ -32,11 +32,7 @@ public class Indexer implements Runnable {
     private final BlockingQueue<PageInfo> queue;
     private final IndexHandler[] indexHandlers;
     private volatile static boolean closed = false;
-<<<<<<< HEAD
     private static final int THREAD_SLEEP_TIME  = 3500;
-=======
-    private static final int THREAD_SLEEP_TIME  = 1000;
->>>>>>> branch 'master' of https://github.com/ewill/KaganSpider.git
     private static final int RECATCH_SLEEP_TIME = 5000;
     
     public Indexer(WebsiteConfigure wc, BlockingDeque<String> deque, BlockingQueue<PageInfo> queue) {
@@ -127,20 +123,12 @@ public class Indexer implements Runnable {
     public static Document parseHtml(String url) {
         Document doc = null;
         try {
-<<<<<<< HEAD
             doc = Jsoup.connect(url)
                        .timeout(5000)
                        .userAgent("Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36")
                        .get();
-=======
-            doc = Jsoup.connect(url).timeout(6000).get();
->>>>>>> branch 'master' of https://github.com/ewill/KaganSpider.git
         } catch (IOException e) {
-<<<<<<< HEAD
             System.out.println(String.format("Parse %s time out %s\n%s", url, new Date(), e.getMessage()));
-=======
-            System.out.println(String.format("Parse %s time out %s", url, new Date()));
->>>>>>> branch 'master' of https://github.com/ewill/KaganSpider.git
         }
         return doc;
     }
