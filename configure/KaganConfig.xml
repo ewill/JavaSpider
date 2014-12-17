@@ -20,7 +20,7 @@
     <DataTable name="" />
     
     <!-- 每个网站读取数据的线程数 -->
-    <ReadThreads value="1" />
+    <ReadThreads value="2" />
     
     <!-- 写入数据的线程数 -->
     <WriteDbThreads value="5" />
@@ -39,16 +39,19 @@
             <url>http://www.sun0769.com/</url>
             <regex>http://news.sun0769.com/(.*?\.shtml)</regex>
             <handler>org.kagan.handler.PageInfoHandler</handler>
+            <charset>GBK</charset>
         </website>
         <website name="jobcn">
             <url>http://info.jobcn.com/</url>
             <regex>http://info\.jobcn\.com/article/([0-9]+)</regex>
             <handler>org.kagan.handler.PageInfoHandler</handler>
+            <charset>GBK</charset>
         </website>
         <website name="163">
             <url>http://www.163.com</url>
             <regex>http://(lady|war|money|home|bbs\.news|edu|news|tech|sports)\.163\.com/\d+/\d+/\d+/([a-zA-Z0-9]+)\.(html)</regex>
             <handler>org.kagan.handler.PageInfoHandler</handler>
+            <charset>UTF-8</charset>
         </website>
     </WebsiteList>
 </KaganRoot>

@@ -11,6 +11,7 @@ public final class Configure {
     public static int dequeSize;
     public static int readThreads;
     public static int writeDbThreads;
+    public static int websiteNum;
     private Map<String, WebsiteConfigure> websites = new LinkedHashMap<String, WebsiteConfigure>();
     
     public Map<String, WebsiteConfigure> getWebsites() {

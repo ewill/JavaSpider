@@ -1,9 +1,7 @@
 package org.kagan.core;
 
-import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +11,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.kagan.config.Configure;
 import org.kagan.config.WebsiteConfigure;
@@ -23,48 +20,46 @@ import org.kagan.util.StringKit;
 
 import com.alibaba.druid.pool.DruidPooledConnection;
 
-public class Indexer implements Runnable {
+public class Indexer extends Thread {
     
+    private final String indexName;
     private final IPageInfo handler;
     private final WebsiteConfigure wc;
-    private final Thread[] readThreads;
+    private final IndexHandler[] indexHandlers;
     private final BlockingDeque<String> deque;
     private final BlockingQueue<PageInfo> queue;
-    private final IndexHandler[] indexHandlers;
     private volatile static boolean closed = false;
-    private static final int THREAD_SLEEP_TIME  = 3500;
-    private static final int RECATCH_SLEEP_TIME = 5000;
+    private static final int THREAD_SLEEP_TIME  = 2000;
     
     public Indexer(WebsiteConfigure wc, BlockingDeque<String> deque, BlockingQueue<PageInfo> queue) {
         this.wc      = wc;
         this.queue   = queue;
         this.deque   = deque;
         this.handler = wc.getHandler();
-        this.readThreads = new Thread[Configure.readThreads];
+        this.indexName = wc.getWebsiteName();
         this.indexHandlers = new IndexHandler[Configure.readThreads];
+        for (int i = 0; i < indexHandlers.length; i++) {
+            indexHandlers[i] = new IndexHandler(this.wc, this.deque, this.queue, this.handler);
+        }
     }
     
     @Override
     public String toString() {
-        return String.format("Deque Size : %d", deque.size());
+        return String.format("%s Deque Size : %d", indexName, deque.size());
     }
     
     public void shutdown() {
         closed = true;
-        for (IndexHandler idxHandler : indexHandlers) {
-            idxHandler.shutdown();
+        
+        try {
+            for (IndexHandler h : indexHandlers) {
+                h.shutdown();
+                h.join();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         
-        boolean indexHandlerFlag;
-        while (true) {
-            indexHandlerFlag = true;
-            for (int i = 0; i < readThreads.length; i++) {
-                indexHandlerFlag = indexHandlerFlag && readThreads[i].isAlive();
-            }
-            if (!indexHandlerFlag) {
-                break;
-            }
-        }
     }
     
     @Override
@@ -80,57 +75,38 @@ public class Indexer implements Runnable {
         String[] hashKeys;
         Map<String, String> map;
         
-        for (int i = 0; i < readThreads.length; i++) {
-            indexHandlers[i] = new IndexHandler(wc, deque, queue, handler);
-            readThreads[i] = new Thread(indexHandlers[i]);
-            readThreads[i].start();
+        for (IndexHandler h : indexHandlers) {
+            h.start();
+            Thread.sleep(100);
         }
         
-        Document doc = parseHtml(wc.getUrl());
+        Document doc = HtmlParser.parse(wc.getUrl(), wc.getCharset());
         while (!closed) {
             if (doc == null) {
-                doc = parseHtml(wc.getUrl());
+                doc = HtmlParser.parse(wc.getUrl(), wc.getCharset());
             } else {
                 map = splitUrl(doc.html());
                 hashKeys = getValidHashKey(map.keySet());
                 if (hashKeys != null) {
+                    addHashKeyToDb(hashKeys);
                     for (int i = 1; i < hashKeys.length; i++) {
                         deque.putFirst(map.get(hashKeys[i]));
                     }
-                    addHashKeyToDb(hashKeys);
-                } else {
-                    doc = parseHtml(wc.getUrl());
-                    Thread.sleep(RECATCH_SLEEP_TIME);
-                    continue;
-                }
-                
-                String url = map.get(hashKeys[0]);
-                if (url != null && (doc = parseHtml(url)) != null) {
-                    // Get page info and then add in queue
-                    PageInfo pageInfo = getPageInfo(wc.getWebsiteName(), StringKit.sha1(url), url, doc, handler);
-                    if (!StringKit.isEmpty(pageInfo.getTitle())) {
-                        queue.put(pageInfo);
+                    
+                    String url = map.get(hashKeys[0]);
+                    if (url != null && (doc = HtmlParser.parse(url, wc.getCharset())) != null) {
+                        // Get page info and then add in queue
+                        PageInfo pageInfo = getPageInfo(wc.getWebsiteName(), StringKit.sha1(url), url, doc, handler);
+                        if (!StringKit.isEmpty(pageInfo.getTitle())) {
+                            queue.put(pageInfo);
+                        }
                     }
                 }
-                
             }
             
             Thread.sleep(THREAD_SLEEP_TIME);
         }
         
-    }
-    
-    public static Document parseHtml(String url) {
-        Document doc = null;
-        try {
-            doc = Jsoup.connect(url)
-                       .timeout(5000)
-                       .userAgent("Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36")
-                       .get();
-        } catch (IOException e) {
-            System.out.println(String.format("Parse %s time out %s\n%s", url, new Date(), e.getMessage()));
-        }
-        return doc;
     }
     
     private Map<String, String> splitUrl(String html) {
@@ -211,7 +187,7 @@ public class Indexer implements Runnable {
         return keySet.size() > 0 ? keySet.toArray(new String[keySet.size()]) : null;
     }
     
-    static class IndexHandler implements Runnable {
+    static class IndexHandler extends Thread {
         
         private IPageInfo handler;
         private final WebsiteConfigure wc;
@@ -230,9 +206,9 @@ public class Indexer implements Runnable {
         public void run() {
             try {
                 Document doc;
-                while (!closed) {
-                    String url = deque.pollLast(5L, TimeUnit.SECONDS);
-                    if (url != null && (doc = parseHtml(url)) != null) {
+                while (deque.size() != 0 || !closed) {
+                    String url = deque.pollLast(2L, TimeUnit.SECONDS);
+                    if (url != null && (doc = HtmlParser.parse(url, wc.getCharset())) != null) {
                         PageInfo pageInfo = getPageInfo(wc.getWebsiteName(), StringKit.sha1(url), url, doc, handler);
                         if (!StringKit.isEmpty(pageInfo.getTitle())) {
                             queue.put(pageInfo);

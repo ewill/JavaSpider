@@ -9,26 +9,29 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.kagan.config.Configure;
 import org.kagan.config.WebsiteConfigure;
+import org.kagan.util.ConfigKit;
 import org.kagan.util.Db;
 import org.kagan.util.StringKit;
 
 public class SpiderRobot {
     
     private final Configure conf;
-    private Thread[] indexerThreads;
-    private final Thread[] dbWriterThreads;
     private final Indexer[] indexers;
     private final DbWriter[] dbWriters;
     private final BlockingQueue<PageInfo> queue;
     private volatile static boolean closed = true;
     
-    public SpiderRobot(Configure conf) {
-        this.conf = conf;
+    public SpiderRobot() throws Exception {
+        this.conf = ConfigKit.loadKaganXml("KaganConfig.xml");
         this.queue = new LinkedBlockingQueue<PageInfo>(Configure.queueSize);
         this.indexers = new Indexer[conf.getWebsites().size()];
         this.dbWriters = new DbWriter[Configure.writeDbThreads];
-        this.indexerThreads = new Thread[conf.getWebsites().size()];
-        this.dbWriterThreads = new Thread[Configure.writeDbThreads];
+        
+        Db.Init(ConfigKit.loadProperties("druid.properties"));
+    }
+    
+    public Configure getConfigure() {
+        return conf;
     }
     
     @Override
@@ -55,55 +58,40 @@ public class SpiderRobot {
                 new LinkedBlockingDeque<String>(Configure.dequeSize),
                 queue
             );
-            indexerThreads[i] = new Thread(indexers[i]);
-            indexerThreads[i++].start();
+            indexers[i++].start();
         }
         
-        for (i = 0; i < Configure.writeDbThreads; i++) {
+        for (i = 0; i < dbWriters.length; i++) {
             dbWriters[i] = new DbWriter(queue);
-            dbWriterThreads[i] = new Thread(dbWriters[i]);
-            dbWriterThreads[i].start();
+            dbWriters[i].start();
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         
         closed = false;
     }
     
     public final void shutdown() {
-        for (Indexer idxer : indexers) {
-            if (idxer != null) {
-                idxer.shutdown();
+        try {
+            for (Indexer idxer : indexers) {
+                if (idxer != null) {
+                    idxer.shutdown();
+                    idxer.join();
+                }
             }
-        }
-        for (DbWriter writer : dbWriters) {
-            if (writer != null) {
-                writer.shutdown();
+            for (DbWriter writer : dbWriters) {
+                if (writer != null) {
+                    writer.shutdown();
+                    writer.join();
+                }
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         closed = true;
-        
-        boolean indexerThreadFlag;
-        boolean dbWriterThreadFlag;
-        while (true) {
-            
-            if (indexerThreads[0] == null || dbWriterThreads[0] == null) {
-                break;
-            }
-            
-            indexerThreadFlag  = true;
-            dbWriterThreadFlag = true;
-            
-            for (int i = 0; i < indexerThreads.length; i++) {
-                indexerThreadFlag = indexerThreadFlag && indexerThreads[i].isAlive();
-            }
-            
-            for (int i = 0; i < dbWriterThreads.length; i++) {
-                dbWriterThreadFlag = dbWriterThreadFlag && dbWriterThreads[i].isAlive();
-            }
-            
-            if (!indexerThreadFlag && !dbWriterThreadFlag || indexerThreads[0] == null) {
-                break;
-            }
-        }
     }
     
     public final int countRecords() {

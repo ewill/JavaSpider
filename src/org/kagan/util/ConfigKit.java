@@ -80,6 +80,7 @@ public static final String RootPath = ConfigKit.class.getClassLoader().getResour
                     String name = website.getAttribute("name");
                     wc.setWebsiteName(name);
                     wc.setUrl(website.getElementsByTagName("url").item(0).getFirstChild().getNodeValue());
+                    wc.setCharset(website.getElementsByTagName("charset").item(0).getFirstChild().getNodeValue());
                     wc.setRegex(Pattern.compile(String.format("(%s)", website.getElementsByTagName("regex").item(0).getFirstChild().getNodeValue())));
                     
                     Class<? extends IPageInfo> clazz = ConfigKit.loadClass(website.getElementsByTagName("handler").item(0).getFirstChild().getNodeValue());
@@ -95,6 +96,8 @@ public static final String RootPath = ConfigKit.class.getClassLoader().getResour
                     bean.setWebsites(name, wc);
                 }
             }
+            
+            Configure.websiteNum = bean.getWebsites().size();
             
         }
         

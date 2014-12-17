@@ -2,14 +2,12 @@ package org.kagan.main;
 
 import java.util.Scanner;
 
-import org.kagan.config.Configure;
+import org.kagan.core.HtmlParser;
 import org.kagan.core.SpiderRobot;
-import org.kagan.util.ConfigKit;
 import org.kagan.util.Db;
 
 public class KaganCenter {
     
-    private static Configure conf;
     private static Scanner scanf = new Scanner(System.in);
     
     public static final void helpMenu() {
@@ -18,12 +16,12 @@ public class KaganCenter {
         System.out.println("| Command List                                                                 |");
         System.out.println("| -----------------------------------------------------------------------------|");
         System.out.println("| conf[ig] - See Configure                                                     |");
-        System.out.println("| count - Count Records                                                        |");
-        System.out.println("| chkrep - Check Repeat Data                                                   |");
-        System.out.println("| start - Spider Robot Start Working                                           |");
-        System.out.println("| stop - Spider Robot Stop Working                                             |");
-        System.out.println("| status - Check Running Status                                                |");
-        System.out.println("| quit - Exit Program                                                          |");
+        System.out.println("| count    - Count Records                                                     |");
+        System.out.println("| chkrep   - Check Repeat Data                                                 |");
+        System.out.println("| start    - Spider Robot Start Working                                        |");
+        System.out.println("| stop     - Spider Robot Stop Working                                         |");
+        System.out.println("| status   - Check Running Status                                              |");
+        System.out.println("| quit     - Exit Program                                                      |");
         System.out.println("--------------------------------------------------------------------------------");
         System.out.println();
     }
@@ -32,9 +30,7 @@ public class KaganCenter {
         SpiderRobot spider = null;
         try {
             String command;
-            conf = ConfigKit.loadKaganXml("KaganConfig.xml");
-            spider = new SpiderRobot(conf);
-            Db.Init(ConfigKit.loadProperties("druid.properties"));
+            spider = new SpiderRobot();
             
             System.out.println("Welcome to Kagan Spider Robot");
             System.out.print(">>> ");
@@ -42,7 +38,7 @@ public class KaganCenter {
                 switch (command) {
                     case "conf":
                     case "config":
-                        System.out.println(conf.toString());
+                        System.out.println(spider.getConfigure().toString());
                         break;
                     case "count":
                         System.out.println(String.format("\nTotal Records : %d\n", spider.countRecords()));
@@ -82,6 +78,7 @@ public class KaganCenter {
         } finally {
             scanf.close();
             spider.shutdown();
+            HtmlParser.shutdown();
             Db.shutdown();
             System.out.println("\nExit Kagan System\n");
         }
