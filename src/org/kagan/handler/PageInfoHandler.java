@@ -25,6 +25,9 @@ public class PageInfoHandler implements IPageInfo {
             }
         } catch (ParseException e) {
         }
+        
+        String title = doc.title();
+        title = title.startsWith("404") ? "" : title;
         pageInfo.setTitle(doc.title());
         return pageInfo;
     }

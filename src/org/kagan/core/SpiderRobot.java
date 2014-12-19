@@ -59,6 +59,11 @@ public class SpiderRobot {
                 queue
             );
             indexers[i++].start();
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         
         for (i = 0; i < dbWriters.length; i++) {
@@ -80,12 +85,14 @@ public class SpiderRobot {
                 if (idxer != null) {
                     idxer.shutdown();
                     idxer.join();
+                    System.out.println(idxer);
                 }
             }
             for (DbWriter writer : dbWriters) {
                 if (writer != null) {
                     writer.shutdown();
                     writer.join();
+                    System.out.println(writer);
                 }
             }
         } catch (InterruptedException e) {

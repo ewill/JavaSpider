@@ -29,7 +29,7 @@ public class Indexer extends Thread {
     private final BlockingDeque<String> deque;
     private final BlockingQueue<PageInfo> queue;
     private volatile static boolean closed = false;
-    private static final int THREAD_SLEEP_TIME  = 2000;
+    private static final int THREAD_SLEEP_TIME  = 4000;
     
     public Indexer(WebsiteConfigure wc, BlockingDeque<String> deque, BlockingQueue<PageInfo> queue) {
         this.wc      = wc;
@@ -77,13 +77,14 @@ public class Indexer extends Thread {
         
         for (IndexHandler h : indexHandlers) {
             h.start();
-            Thread.sleep(100);
+            Thread.sleep(1000);
         }
         
         Document doc = HtmlParser.parse(wc.getUrl(), wc.getCharset());
         while (!closed) {
             if (doc == null) {
                 doc = HtmlParser.parse(wc.getUrl(), wc.getCharset());
+                Thread.sleep(THREAD_SLEEP_TIME);
             } else {
                 map = splitUrl(doc.html());
                 hashKeys = getValidHashKey(map.keySet());
@@ -101,10 +102,11 @@ public class Indexer extends Thread {
                             queue.put(pageInfo);
                         }
                     }
+                } else {
+                    doc = null;
                 }
             }
             
-            Thread.sleep(THREAD_SLEEP_TIME);
         }
         
     }

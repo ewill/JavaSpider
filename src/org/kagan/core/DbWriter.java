@@ -16,7 +16,7 @@ public class DbWriter extends Thread {
     
     private volatile static boolean closed = false;
     private static final short BUFF_SIZE = 10;
-    private static final int THREAD_SLEEP_TIME = 500;
+    private static final int THREAD_SLEEP_TIME = 100;
     
     private final List<PageInfo> buff;
     private final BlockingQueue<PageInfo> queue;
@@ -42,7 +42,7 @@ public class DbWriter extends Thread {
     
     private void writeData() throws InterruptedException {
         while (!closed) {
-            if (buff.size() == BUFF_SIZE) {
+            if (buff.size() >= BUFF_SIZE) {
                 writeToDb();
             }
             
@@ -75,7 +75,11 @@ public class DbWriter extends Thread {
                 pstmt.setString(2, pageInfo.getLink());
                 pstmt.setString(3, pageInfo.getPageContent() != null ? pageInfo.getPageContent() : "");
                 pstmt.setString(4, pageInfo.getComeFrom());
-                pstmt.setDate(5, new Date(pageInfo.getPostTime().getTime()));
+                try {
+                    pstmt.setDate(5, new Date(pageInfo.getPostTime().getTime()));
+                } catch (Exception e) {
+                    pstmt.setDate(5, new Date(System.currentTimeMillis()));
+                }
                 pstmt.addBatch();
             }
             

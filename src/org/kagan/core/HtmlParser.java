@@ -1,11 +1,13 @@
 package org.kagan.core;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -19,15 +21,22 @@ import org.kagan.config.Configure;
 
 public final class HtmlParser {
     
+    private final IdleConnectionMonitorThread monitor;
     private final CloseableHttpClient httpClient;
     private static final HtmlParser me = new HtmlParser();
     private final PoolingHttpClientConnectionManager connMgr;
+    private static final int CONNECT_TIMEOUT = 8000;
     
     private HtmlParser() {
-        this.connMgr = new PoolingHttpClientConnectionManager(5, TimeUnit.SECONDS);
-        this.connMgr.setDefaultMaxPerRoute(5);
+        this.connMgr = new PoolingHttpClientConnectionManager();
+        this.connMgr.setDefaultMaxPerRoute(10);
         this.connMgr.setMaxTotal(Configure.websiteNum * 50);
-        this.httpClient = HttpClients.custom().setConnectionManager(this.connMgr).build();
+        this.httpClient = HttpClients.custom().setDefaultRequestConfig(
+            RequestConfig.custom().setSocketTimeout(CONNECT_TIMEOUT).setConnectTimeout(CONNECT_TIMEOUT).build()
+        ).setConnectionManager(this.connMgr).build();
+        
+        monitor = new IdleConnectionMonitorThread(this.connMgr);
+        monitor.start();
     }
     
     public static Document parse(String url, String charset) {
@@ -41,15 +50,13 @@ public final class HtmlParser {
                     HttpEntity entity = response.getEntity();
                     return Jsoup.parse(EntityUtils.toString(entity, charset));
                 } else {
-                    System.out.println(String.format("HtmlParser: %s - Status Code : %d.", url, statusCode));
+                    System.out.println(String.format("[%s] - HtmlParser: %s - Status Code : %d.", new Date(), url, statusCode));
                 }
-            } catch (Exception e) {
-                System.out.println(String.format("HtmlParser: %s %s.", url, e.getMessage()));
             } finally {
                 response.close();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println(String.format("[%s] - HtmlParser: %s %s.", new Date(), url, e.getMessage()));
         }
         
         return null;
@@ -57,10 +64,45 @@ public final class HtmlParser {
     
     public static final void shutdown() {
         try {
+            me.monitor.shutdown();
             me.httpClient.close();
             me.connMgr.shutdown();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public static class IdleConnectionMonitorThread extends Thread {
+        
+        private volatile boolean shutdown;
+        private final PoolingHttpClientConnectionManager connMgr;
+        private static final int WAIT_TIMEOUT = 8000;
+        
+        public IdleConnectionMonitorThread(PoolingHttpClientConnectionManager connMgr) {
+            this.connMgr = connMgr;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (!shutdown) {
+                    synchronized (this) {
+                        wait(WAIT_TIMEOUT);
+                        connMgr.closeExpiredConnections();
+                        connMgr.closeIdleConnections(30, TimeUnit.SECONDS);
+                    }
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        public void shutdown() {
+            shutdown = true;
+            synchronized(this) {
+                notifyAll();
+            }
+        }
+        
     }
 }
