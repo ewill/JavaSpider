@@ -27,6 +27,7 @@ public class SpiderRobot {
         this.indexers = new Indexer[conf.getWebsites().size()];
         this.dbWriters = new DbWriter[Configure.writeDbThreads];
         
+        HtmlParser.setRetryTimes(Configure.retryTimes);
         Db.Init(ConfigKit.loadProperties("druid.properties"));
     }
     

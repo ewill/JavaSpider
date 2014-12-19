@@ -10,6 +10,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.ProtocolException;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -31,6 +32,11 @@ public final class HtmlParser {
     private static final HtmlParser me = new HtmlParser();
     private final PoolingHttpClientConnectionManager connMgr;
     private static final int CONNECT_TIMEOUT = 10000;
+    private static int retryTimes;
+    
+    public static void setRetryTimes(int retry) {
+        retryTimes = retry;
+    }
     
     private HtmlParser() {
         this.connMgr = new PoolingHttpClientConnectionManager();
@@ -45,7 +51,10 @@ public final class HtmlParser {
                          .setConnectTimeout(CONNECT_TIMEOUT)
                          .setConnectionRequestTimeout(CONNECT_TIMEOUT)
                          .build()
-        ).setRedirectStrategy(new RedirectStrategy()).setConnectionManager(this.connMgr).build();
+        ).setRedirectStrategy(new RedirectStrategy())
+         .setConnectionManager(this.connMgr)
+         .setRetryHandler(new RequestRetryHandler())
+         .build();
         
         monitor = new IdleConnectionMonitorThread(this.connMgr);
         monitor.start();
@@ -82,6 +91,19 @@ public final class HtmlParser {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public static class RequestRetryHandler implements HttpRequestRetryHandler {
+
+        @Override
+        public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
+            boolean isRetry = true;
+            if (executionCount >= retryTimes) {
+                isRetry = false;
+            }
+            return isRetry;
+        }
+        
     }
     
     public static class RedirectStrategy extends DefaultRedirectStrategy {

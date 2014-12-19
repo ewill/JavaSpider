@@ -19,6 +19,9 @@
     -->
     <DataTable name="" />
     
+    <!-- 连接超时后，重新连接的次数 -->
+    <RetryTimes value="10" />
+    
     <!-- 每个网站读取数据的线程数 -->
     <ReadThreads value="3" />
     

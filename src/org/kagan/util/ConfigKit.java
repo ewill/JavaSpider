@@ -70,6 +70,9 @@ public static final String RootPath = ConfigKit.class.getClassLoader().getResour
             // DequeSize
             Configure.dequeSize = Integer.valueOf(((Element)root.getElementsByTagName("DequeSize").item(0)).getAttribute("value"));
             
+            // RetryTimes
+            Configure.retryTimes = Integer.valueOf(((Element)root.getElementsByTagName("RetryTimes").item(0)).getAttribute("value"));
+            
             // WebsiteList
             NodeList websiteList = root.getElementsByTagName("WebsiteList");
             if (websiteList.getLength() > 0) {
