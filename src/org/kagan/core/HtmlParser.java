@@ -6,14 +6,19 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.ProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -33,7 +38,7 @@ public final class HtmlParser {
         this.connMgr.setMaxTotal(Configure.websiteNum * 50);
         this.httpClient = HttpClients.custom().setDefaultRequestConfig(
             RequestConfig.custom().setSocketTimeout(CONNECT_TIMEOUT).setConnectTimeout(CONNECT_TIMEOUT).build()
-        ).setConnectionManager(this.connMgr).build();
+        ).setRedirectStrategy(new RedirectStrategy()).setConnectionManager(this.connMgr).build();
         
         monitor = new IdleConnectionMonitorThread(this.connMgr);
         monitor.start();
@@ -70,6 +75,27 @@ public final class HtmlParser {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public static class RedirectStrategy extends DefaultRedirectStrategy {
+
+        @Override
+        public boolean isRedirected(HttpRequest request, HttpResponse response, HttpContext context) throws ProtocolException {
+            boolean isRedirect = false;
+            try {
+                isRedirect = super.isRedirected(request, response, context);
+            } catch (ProtocolException e) {
+                e.printStackTrace();
+            }
+            if (!isRedirect) {
+                int responseCode = response.getStatusLine().getStatusCode();
+                if (responseCode == 301 || responseCode == 302) {
+                    return true;
+                }
+            }
+            return isRedirect;
+        }
+        
     }
     
     public static class IdleConnectionMonitorThread extends Thread {
