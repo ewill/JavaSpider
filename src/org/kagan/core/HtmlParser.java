@@ -30,14 +30,21 @@ public final class HtmlParser {
     private final CloseableHttpClient httpClient;
     private static final HtmlParser me = new HtmlParser();
     private final PoolingHttpClientConnectionManager connMgr;
-    private static final int CONNECT_TIMEOUT = 8000;
+    private static final int CONNECT_TIMEOUT = 10000;
     
     private HtmlParser() {
         this.connMgr = new PoolingHttpClientConnectionManager();
         this.connMgr.setDefaultMaxPerRoute(10);
         this.connMgr.setMaxTotal(Configure.websiteNum * 50);
         this.httpClient = HttpClients.custom().setDefaultRequestConfig(
-            RequestConfig.custom().setSocketTimeout(CONNECT_TIMEOUT).setConnectTimeout(CONNECT_TIMEOUT).build()
+            RequestConfig.custom()
+                         .setRedirectsEnabled(true)
+                         .setRelativeRedirectsAllowed(true)
+                         .setCircularRedirectsAllowed(false)
+                         .setSocketTimeout(CONNECT_TIMEOUT)
+                         .setConnectTimeout(CONNECT_TIMEOUT)
+                         .setConnectionRequestTimeout(CONNECT_TIMEOUT)
+                         .build()
         ).setRedirectStrategy(new RedirectStrategy()).setConnectionManager(this.connMgr).build();
         
         monitor = new IdleConnectionMonitorThread(this.connMgr);

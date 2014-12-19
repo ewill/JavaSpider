@@ -27,8 +27,8 @@ public class PageInfoHandler implements IPageInfo {
         }
         
         String title = doc.title();
-        title = title.startsWith("404") ? "" : title;
-        pageInfo.setTitle(doc.title());
+        title = title.contains("404") || title.contains("页面不存在") ? "" : title;
+        pageInfo.setTitle(title);
         return pageInfo;
     }
     
