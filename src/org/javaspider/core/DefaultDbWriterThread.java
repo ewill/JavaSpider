@@ -1,4 +1,4 @@
-package org.kagan.core;
+package org.javaspider.core;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -7,28 +7,21 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.kagan.config.Configure;
-import org.kagan.util.Db;
+import org.javaspider.config.Config;
+import org.javaspider.kit.Db;
 
 import com.alibaba.druid.pool.DruidPooledConnection;
 
-public class DbWriter extends Thread {
+public class DefaultDbWriterThread extends AbstractWriterThread {
     
-    private volatile static boolean closed = false;
+    private final List<PageInfo> buff;
+    private volatile boolean closed = false;
     private static final short BUFF_SIZE = 10;
     private static final int THREAD_SLEEP_TIME = 100;
     
-    private final List<PageInfo> buff;
-    private final BlockingQueue<PageInfo> queue;
-    
-    public DbWriter(BlockingQueue<PageInfo> queue) {
-        this.queue = queue;
+    public DefaultDbWriterThread(Config conf, BlockingQueue<PageInfo> queue) {
+        super(conf, queue);
         this.buff = new ArrayList<PageInfo>(BUFF_SIZE);
-    }
-    
-    @Override
-    public String toString() {
-        return String.format("Buff Size : %d", buff.size());
     }
     
     @Override
@@ -68,7 +61,7 @@ public class DbWriter extends Thread {
         
         try {
             conn = Db.getConnection();
-            pstmt = conn.prepareStatement(String.format("INSERT INTO %s ( title, link, pageContent, comeFrom, postTime ) VALUES ( ?, ?, ?, ?, ? ) ", Configure.dataTable));
+            pstmt = conn.prepareStatement(String.format("INSERT INTO %s ( title, link, pageContent, comeFrom, postTime ) VALUES ( ?, ?, ?, ?, ? ) ", conf.getConfigure().getDataTable()));
             
             for (PageInfo pageInfo : buff) {
                 pstmt.setString(1, pageInfo.getTitle());
@@ -96,7 +89,8 @@ public class DbWriter extends Thread {
         return status;
     }
     
-    public void shutdown() {
+    @Override
+    public void close() {
         closed = true;
         while (true) {
             if (buff.size() == 0) {

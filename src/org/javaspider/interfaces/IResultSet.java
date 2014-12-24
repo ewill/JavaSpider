@@ -1,4 +1,4 @@
-package org.kagan.interfaces;
+package org.javaspider.interfaces;
 
 import java.sql.ResultSet;
 import java.util.Map;

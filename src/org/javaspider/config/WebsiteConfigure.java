@@ -1,16 +1,34 @@
-package org.kagan.config;
+package org.javaspider.config;
 
 import java.util.regex.Pattern;
 
-import org.kagan.interfaces.IPageInfo;
+import org.javaspider.interfaces.IPageHandler;
 
 public final class WebsiteConfigure {
     private String url;
     private Pattern regex;
     private String charset;
     private String websiteName;
-    private IPageInfo handler;
+    private String indexerClass;
+    private String writerClass;
+    private IPageHandler handler;
     
+    public String getIndexerClass() {
+        return indexerClass;
+    }
+
+    public void setIndexerClass(String indexerClass) {
+        this.indexerClass = indexerClass;
+    }
+
+    public String getWriterClass() {
+        return writerClass;
+    }
+
+    public void setWriterClass(String writerClass) {
+        this.writerClass = writerClass;
+    }
+
     public String getCharset() {
         return charset;
     }
@@ -19,11 +37,11 @@ public final class WebsiteConfigure {
         this.charset = charset;
     }
 
-    public IPageInfo getHandler() {
+    public IPageHandler getHandler() {
         return handler;
     }
 
-    public void setHandler(IPageInfo handler) {
+    public void setHandler(IPageHandler handler) {
         this.handler = handler;
     }
 
@@ -49,18 +67,6 @@ public final class WebsiteConfigure {
     
     public void setRegex(Pattern regex) {
         this.regex = regex;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s\nWebsite Name : %s\n         Url : %s\n       Regex : %s\n     Charset : %s\n     Handler : %s\n",
-            "--------------------------------------------------------------------------------",
-            websiteName,
-            url,
-            regex.toString(),
-            charset,
-            handler.getClass().getName()
-        );
     }
     
 }

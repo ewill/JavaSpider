@@ -1,7 +1,6 @@
-package org.kagan.core;
+package org.javaspider.core;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpEntity;
@@ -21,79 +20,86 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
+import org.javaspider.config.Config;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.kagan.config.Configure;
 
-public final class HtmlParser {
+public final class HttpClient {
     
-    private final IdleConnectionMonitorThread monitor;
+    private final Config conf;
     private final CloseableHttpClient httpClient;
-    private static final HtmlParser me = new HtmlParser();
+    private final IdleConnectionMonitorThread monitor;
     private final PoolingHttpClientConnectionManager connMgr;
-    private static final int CONNECT_TIMEOUT = 10000;
-    private static int retryTimes;
+    private static final Logger log = Logger.getLogger(HttpClient.class);
     
-    public static void setRetryTimes(int retry) {
-        retryTimes = retry;
-    }
-    
-    private HtmlParser() {
+    HttpClient(Config conf) {
+        this.conf = conf;
         this.connMgr = new PoolingHttpClientConnectionManager();
-        this.connMgr.setDefaultMaxPerRoute(10);
-        this.connMgr.setMaxTotal(Configure.websiteNum * 50);
+        this.connMgr.setDefaultMaxPerRoute(this.conf.getHttpClientConfig().getMaxPerRoute());
+        this.connMgr.setMaxTotal(this.conf.getConfigure().getWebsites().size() * this.conf.getHttpClientConfig().getMaxPerRoute());
         this.httpClient = HttpClients.custom().setDefaultRequestConfig(
             RequestConfig.custom()
-                         .setRedirectsEnabled(true)
-                         .setRelativeRedirectsAllowed(true)
                          .setCircularRedirectsAllowed(false)
-                         .setSocketTimeout(CONNECT_TIMEOUT)
-                         .setConnectTimeout(CONNECT_TIMEOUT)
-                         .setConnectionRequestTimeout(CONNECT_TIMEOUT)
+                         .setRedirectsEnabled(this.conf.getHttpClientConfig().isRedirectEnabled())
+                         .setRelativeRedirectsAllowed(this.conf.getHttpClientConfig().isRedirectEnabled())
+                         .setSocketTimeout(this.conf.getHttpClientConfig().getSocketTimeout())
+                         .setConnectTimeout(this.conf.getHttpClientConfig().getConnectionTimeout())
+                         .setConnectionRequestTimeout(this.conf.getHttpClientConfig().getRequestTimeout())
                          .build()
         ).setRedirectStrategy(new RedirectStrategy())
          .setConnectionManager(this.connMgr)
-         .setRetryHandler(new RequestRetryHandler())
+         .setRetryHandler(new RequestRetryHandler(this.conf.getHttpClientConfig().getRetryTimes()))
          .build();
         
-        monitor = new IdleConnectionMonitorThread(this.connMgr);
-        monitor.start();
+        this.monitor = new IdleConnectionMonitorThread(this.connMgr);
+        this.monitor.start();
     }
     
-    public static Document parse(String url, String charset) {
+    public final Document parse(String url) {
+        return parse(url, Config.DEFAULT_CHARSET);
+    }
+    
+    public final Document parse(String url, String charset) {
         try {
             HttpGet httpGet = new HttpGet(url);
-            httpGet.addHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36 SE 2.X MetaSr 1.0");
-            CloseableHttpResponse response = me.httpClient.execute(httpGet, HttpClientContext.create());
+            httpGet.addHeader(HttpHeaders.USER_AGENT, conf.getHttpClientConfig().getUserAgent());
+            CloseableHttpResponse response = httpClient.execute(httpGet, HttpClientContext.create());
             try {
                 int statusCode = response.getStatusLine().getStatusCode();
                 if (statusCode == HttpStatus.SC_OK) {
                     HttpEntity entity = response.getEntity();
                     return Jsoup.parse(EntityUtils.toString(entity, charset));
                 } else {
-                    System.out.println(String.format("[%s] - HtmlParser: %s - Status Code : %d.", new Date(), url, statusCode));
+                    log.error(String.format("HttpClient: %s - Status Code : %d.", url, statusCode));
                 }
             } finally {
                 response.close();
             }
         } catch (Exception e) {
-            System.out.println(String.format("[%s] - HtmlParser: %s %s.", new Date(), url, e.getMessage()));
+            log.error(String.format("HttpClient: %s %s.", url, e.getMessage()), e);
         }
         
         return null;
     }
     
-    public static final void shutdown() {
+    public final void shutdown() {
         try {
-            me.monitor.shutdown();
-            me.httpClient.close();
-            me.connMgr.shutdown();
+            monitor.shutdown();
+            httpClient.close();
+            connMgr.shutdown();
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
     
     public static class RequestRetryHandler implements HttpRequestRetryHandler {
+        
+        private final int retryTimes;
+        
+        public RequestRetryHandler(int retryTimes) {
+            this.retryTimes = retryTimes;
+        }
 
         @Override
         public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
@@ -114,7 +120,7 @@ public final class HtmlParser {
             try {
                 isRedirect = super.isRedirected(request, response, context);
             } catch (ProtocolException e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             }
             if (!isRedirect) {
                 int responseCode = response.getStatusLine().getStatusCode();
