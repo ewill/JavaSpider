@@ -1,4 +1,4 @@
-KaganSpider
+JavaSpider
 ===========
 
-Kagan Spider Robot
+Java Spider Robot
