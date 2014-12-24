@@ -1,25 +1,25 @@
 package org.javaspider.core;
 
-import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.javaspider.config.Config;
 import org.javaspider.config.WebsiteConfigure;
 import org.javaspider.kit.ConfigKit;
 
-public class JavaSpider {
+public final class JavaSpider {
     
     private final Config conf;
     private final HttpClient httpClient;
     private volatile boolean closed = true;
     private final AbstractWriterThread[] dbWriters;
     private final AbstractIndexerThread[] indexers;
-    private static final Logger log = Logger.getLogger(JavaSpider.class);
+    private static final Log log = LogFactory.getLog(JavaSpider.class);
     
     public JavaSpider(Config conf) {
         this.conf = conf;
@@ -28,7 +28,6 @@ public class JavaSpider {
         this.indexers = new AbstractIndexerThread[conf.getConfigure().getWebsites().size()];
     }
     
-    @SuppressWarnings("unchecked")
     public final void start() {
         if (!closed) { return; }
         
@@ -36,28 +35,45 @@ public class JavaSpider {
         for (Map.Entry<String, WebsiteConfigure> entry : conf.getConfigure().getWebsites().entrySet()) {
             try {
                 BlockingQueue<PageInfo> queue = new LinkedBlockingQueue<PageInfo>(conf.getConfigure().getQueueSize());
-                Class<? extends AbstractIndexerThread> indexerClazz = ConfigKit.loadClass(entry.getValue().getIndexerClass());
-                indexers[i] = ConfigKit.newConstructorInstance(
-                    ConfigKit.newConstructor(
-                        indexerClazz,
-                        Config.class,
-                        HttpClient.class,
-                        WebsiteConfigure.class,
-                        BlockingDeque.class,
-                        BlockingQueue.class
-                    ),
-                    conf,
-                    httpClient,
-                    entry.getValue(),
-                    new LinkedBlockingDeque<String>(conf.getConfigure().getDequeSize()),
-                    queue
-                );
+                Class<? extends AbstractIndexerThread> indexerClass = entry.getValue().getIndexerClass();
+                if (indexerClass == null) {
+                    indexers[i] = new DefaultIndexerThread(
+                        conf,
+                        httpClient,
+                        entry.getValue(),
+                        new LinkedBlockingDeque<String>(conf.getConfigure().getDequeSize()),
+                        queue
+                    );
+                } else {
+                    indexers[i] = ConfigKit.newConstructorInstance(
+                        ConfigKit.newConstructor(
+                            indexerClass,
+                            Config.class,
+                            HttpClient.class,
+                            WebsiteConfigure.class,
+                            BlockingDeque.class,
+                            BlockingQueue.class
+                        ),
+                        conf,
+                        httpClient,
+                        entry.getValue(),
+                        new LinkedBlockingDeque<String>(conf.getConfigure().getDequeSize()),
+                        queue
+                    );
+                }
                 indexers[i++].start();
                 
-                Class<? extends AbstractWriterThread> writerClazz = ConfigKit.loadClass(entry.getValue().getWriterClass());
-                Constructor<? extends AbstractWriterThread> writerConstructor = ConfigKit.newConstructor(writerClazz, Config.class, BlockingQueue.class);
+                Class<? extends AbstractWriterThread> writer = entry.getValue().getWriterClass();
                 for (i = 0; i < conf.getConfigure().getWriteDbThreads(); i++) {
-                    dbWriters[i] = ConfigKit.newConstructorInstance(writerConstructor, conf, queue);
+                    if (writer == null) {
+                        dbWriters[i] = new DefaultDbWriterThread(conf, queue);
+                    } else {
+                        dbWriters[i] = ConfigKit.newConstructorInstance(
+                            ConfigKit.newConstructor(writer, Config.class, BlockingQueue.class),
+                            conf,
+                            queue
+                        );
+                    }
                     dbWriters[i].start();
                 }
                 

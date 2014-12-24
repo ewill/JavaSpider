@@ -7,10 +7,10 @@ public final class Configure {
     
     private String indexTable;
     private String dataTable;
-    private int queueSize;
-    private int dequeSize;
-    private int readThreads;
-    private int writeDbThreads;
+    private int queueSize = 50;
+    private int dequeSize = 100;
+    private int readThreads = 3;
+    private int writeDbThreads = 3;
     private Map<String, WebsiteConfigure> websites = new LinkedHashMap<String, WebsiteConfigure>();
     
     public String getIndexTable() {
@@ -65,8 +65,8 @@ public final class Configure {
         return websites;
     }
 
-    public void setWebsites(Map<String, WebsiteConfigure> websites) {
-        this.websites = websites;
+    public void setWebsites(String name, WebsiteConfigure wc) {
+        this.websites.put(name, wc);
     }
 
 }

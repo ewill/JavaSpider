@@ -6,11 +6,12 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public final class ConfigKit {
     
-    private static final Logger log = Logger.getLogger(ConfigKit.class);
+    private static final Log log = LogFactory.getLog(ConfigKit.class);
     
     private ConfigKit() {}
     

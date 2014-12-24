@@ -3,6 +3,8 @@ package org.javaspider.core;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpRequest;
@@ -20,7 +22,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Logger;
 import org.javaspider.config.Config;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -31,7 +32,7 @@ public final class HttpClient {
     private final CloseableHttpClient httpClient;
     private final IdleConnectionMonitorThread monitor;
     private final PoolingHttpClientConnectionManager connMgr;
-    private static final Logger log = Logger.getLogger(HttpClient.class);
+    private static final Log log = LogFactory.getLog(HttpClient.class);
     
     HttpClient(Config conf) {
         this.conf = conf;
@@ -154,7 +155,7 @@ public final class HttpClient {
                     }
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
             }
         }
         
