@@ -10,17 +10,8 @@ public class PageInfo {
     private String hashKey;
     private String pageContent;
     private String comeFrom;
-    private String image;
     private Date postTime = new Date();
     
-    public String getImage() {
-        return image;
-    }
-
-    public void setImage(String image) {
-        this.image = image;
-    }
-
     public Date getPostTime() {
         return postTime;
     }

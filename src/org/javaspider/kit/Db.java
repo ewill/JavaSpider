@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.javaspider.interfaces.IResultSet;
 
 import com.alibaba.druid.pool.DruidDataSource;
@@ -20,6 +22,7 @@ import com.alibaba.druid.pool.DruidPooledConnection;
 public final class Db {
     
     private static DruidDataSource ds = null;
+    private static final Log log = LogFactory.getLog(Db.class);
     
     private Db() {}
     
@@ -31,9 +34,13 @@ public final class Db {
         return data;
     }
     
-    public synchronized static final void Init(Properties p) throws Exception {
+    public synchronized static final void Init(Properties p) {
         if (ds == null) {
-            ds = (DruidDataSource)DruidDataSourceFactory.createDataSource(p);
+            try {
+                ds = (DruidDataSource)DruidDataSourceFactory.createDataSource(p);
+            } catch (Exception e) {
+                log.error("Initial Db fail!", e);
+            }
         }
     }
     

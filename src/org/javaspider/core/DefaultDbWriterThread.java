@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.javaspider.config.Config;
 import org.javaspider.kit.Db;
 
@@ -17,7 +19,8 @@ public class DefaultDbWriterThread extends AbstractWriterThread {
     private final List<PageInfo> buff;
     private volatile boolean closed = false;
     private static final short BUFF_SIZE = 10;
-    private static final int THREAD_SLEEP_TIME = 100;
+    private static final int THREAD_SLEEP_TIME = 500;
+    private static final Log log = LogFactory.getLog(DefaultDbWriterThread.class);
     
     public DefaultDbWriterThread(Config conf, BlockingQueue<PageInfo> queue) {
         super(conf, queue);
@@ -80,7 +83,7 @@ public class DefaultDbWriterThread extends AbstractWriterThread {
             status = true;
             
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Write data to db fail!", e);
         } finally {
             Db.close(conn, pstmt);
         }

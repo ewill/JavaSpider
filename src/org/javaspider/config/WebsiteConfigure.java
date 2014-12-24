@@ -2,31 +2,51 @@ package org.javaspider.config;
 
 import java.util.regex.Pattern;
 
+import org.javaspider.core.AbstractIndexerThread;
+import org.javaspider.core.AbstractWriterThread;
 import org.javaspider.interfaces.IPageHandler;
 
 public final class WebsiteConfigure {
+    
     private String url;
     private Pattern regex;
-    private String charset;
     private String websiteName;
-    private String indexerClass;
-    private String writerClass;
-    private IPageHandler handler;
+    private int catchPageTimeout = 3000;
+    private String charset = Config.DEFAULT_CHARSET;
+    private Class<? extends IPageHandler> handlerClass;
+    private Class<? extends AbstractWriterThread> writerClass;
+    private Class<? extends AbstractIndexerThread> indexerClass;
     
-    public String getIndexerClass() {
+    public int getCatchPageTimeout() {
+        return catchPageTimeout;
+    }
+
+    public void setCatchPageTimeout(int catchPageTimeout) {
+        this.catchPageTimeout = catchPageTimeout;
+    }
+
+    public Class<? extends AbstractIndexerThread> getIndexerClass() {
         return indexerClass;
     }
 
-    public void setIndexerClass(String indexerClass) {
+    public void setIndexerClass(Class<? extends AbstractIndexerThread> indexerClass) {
         this.indexerClass = indexerClass;
     }
 
-    public String getWriterClass() {
+    public Class<? extends AbstractWriterThread> getWriterClass() {
         return writerClass;
     }
 
-    public void setWriterClass(String writerClass) {
+    public void setWriterClass(Class<? extends AbstractWriterThread> writerClass) {
         this.writerClass = writerClass;
+    }
+
+    public Class<? extends IPageHandler> getHandlerClass() {
+        return handlerClass;
+    }
+
+    public void setHandlerClass(Class<? extends IPageHandler> handlerClass) {
+        this.handlerClass = handlerClass;
     }
 
     public String getCharset() {
@@ -35,14 +55,6 @@ public final class WebsiteConfigure {
 
     public void setCharset(String charset) {
         this.charset = charset;
-    }
-
-    public IPageHandler getHandler() {
-        return handler;
-    }
-
-    public void setHandler(IPageHandler handler) {
-        this.handler = handler;
     }
 
     public String getWebsiteName() {
@@ -65,8 +77,8 @@ public final class WebsiteConfigure {
         return regex;
     }
     
-    public void setRegex(Pattern regex) {
-        this.regex = regex;
+    public void setRegex(String regex) {
+        this.regex = Pattern.compile(String.format("(%s)", regex));
     }
     
 }

@@ -8,7 +8,9 @@ import java.util.regex.Matcher;
 
 import org.javaspider.config.Config;
 import org.javaspider.config.WebsiteConfigure;
+import org.javaspider.handler.PageInfoHandler;
 import org.javaspider.interfaces.IPageHandler;
+import org.javaspider.kit.ConfigKit;
 import org.javaspider.kit.StringKit;
 import org.jsoup.nodes.Document;
 
@@ -27,7 +29,13 @@ public abstract class AbstractIndexerThread extends Thread {
         this.queue      = queue;
         this.deque      = deque;
         this.httpClient = httpClient;
-        this.handler    = wc.getHandler();
+        
+        Class<? extends IPageHandler> handlerClass = wc.getHandlerClass();
+        if (handlerClass == null) {
+            this.handler = new PageInfoHandler();
+        } else {
+            this.handler = (IPageHandler)ConfigKit.newInstance(handlerClass);
+        }
     }
     
     public abstract void run();

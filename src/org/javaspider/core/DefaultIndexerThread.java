@@ -9,7 +9,8 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.javaspider.config.Config;
 import org.javaspider.config.WebsiteConfigure;
 import org.javaspider.kit.Db;
@@ -22,8 +23,7 @@ public final class DefaultIndexerThread extends AbstractIndexerThread {
     
     private volatile boolean closed = true;
     private final IndexHandler[] indexHandlers;
-    private static final int THREAD_SLEEP_TIME  = 4000;
-    private static final Logger log = Logger.getLogger(DefaultIndexerThread.class);
+    private static final Log log = LogFactory.getLog(DefaultIndexerThread.class);
     
     public DefaultIndexerThread(Config conf, HttpClient httpClient, WebsiteConfigure wc, BlockingDeque<String> deque, BlockingQueue<PageInfo> queue) {
         super(conf, httpClient, wc, deque, queue);
@@ -36,6 +36,7 @@ public final class DefaultIndexerThread extends AbstractIndexerThread {
     @Override
     public void close() {
         if (!closed) {
+            closed = true;
             try {
                 for (IndexHandler h : indexHandlers) {
                     h.close();
@@ -44,7 +45,6 @@ public final class DefaultIndexerThread extends AbstractIndexerThread {
             } catch (InterruptedException e) {
                 log.error(e.getMessage());
             }
-            closed = true;
         }
     }
     
@@ -73,7 +73,7 @@ public final class DefaultIndexerThread extends AbstractIndexerThread {
         while (!closed) {
             if (doc == null) {
                 doc = httpClient.parse(wc.getUrl(), wc.getCharset());
-                Thread.sleep(THREAD_SLEEP_TIME);
+                Thread.sleep(wc.getCatchPageTimeout());
             } else {
                 map = splitUrl(doc.html());
                 hashKeys = getValidHashKey(map.keySet());
@@ -175,14 +175,14 @@ public final class DefaultIndexerThread extends AbstractIndexerThread {
                 try {
                     Document doc;
                     while (indexer.deque.size() != 0 || !closed) {
-                        String url = indexer.deque.pollLast(2L, TimeUnit.SECONDS);
+                        String url = indexer.deque.pollLast(1L, TimeUnit.SECONDS);
                         if (url != null && (doc = indexer.httpClient.parse(url, indexer.wc.getCharset())) != null) {
                             PageInfo pageInfo = indexer.getPageInfo(indexer.wc.getWebsiteName(), StringKit.sha1(url), url, doc, indexer.handler);
                             if (!StringKit.isEmpty(pageInfo.getTitle())) {
                                 indexer.queue.put(pageInfo);
+                                Thread.sleep(indexer.wc.getCatchPageTimeout());
                             }
                         }
-                        Thread.sleep(THREAD_SLEEP_TIME);
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
