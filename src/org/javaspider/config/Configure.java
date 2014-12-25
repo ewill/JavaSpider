@@ -7,10 +7,17 @@ public final class Configure {
     
     private String indexTable;
     private String dataTable;
+<<<<<<< HEAD
     private int queueSize = 20;
     private int dequeSize = 100;
     private int readThreads = 2;
     private int writeDbThreads = 2;
+=======
+    private int queueSize = 50;
+    private int dequeSize = 100;
+    private int readThreads = 3;
+    private int writeDbThreads = 3;
+>>>>>>> branch 'master' of https://github.com/ewill/KaganSpider.git
     private Map<String, WebsiteConfigure> websites = new LinkedHashMap<String, WebsiteConfigure>();
     
     public String getIndexTable() {

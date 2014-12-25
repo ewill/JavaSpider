@@ -17,7 +17,10 @@ public class Bootstrap {
     protected final Properties pro;
     protected final JavaSpider spider;
     protected final JavaSpiderConfig config;
+<<<<<<< HEAD
     private static final Log log = LogFactory.getLog(Bootstrap.class);
+=======
+>>>>>>> branch 'master' of https://github.com/ewill/KaganSpider.git
     
     public Bootstrap() {
         this.c = new Config();
@@ -38,7 +41,10 @@ public class Bootstrap {
         config.beforeStop();
         spider.shutdown();
         Db.shutdown();
+<<<<<<< HEAD
         log.info("Exit System");
+=======
+>>>>>>> branch 'master' of https://github.com/ewill/KaganSpider.git
     }
 
 }
