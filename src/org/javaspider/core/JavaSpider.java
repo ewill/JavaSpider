@@ -64,7 +64,6 @@ public final class JavaSpider {
                 indexers[i++].start();
                 
                 Class<? extends AbstractWriterThread> writer = entry.getValue().getWriterClass();
-<<<<<<< HEAD
                 for (int j = 0; j < conf.getConfigure().getWriteDbThreads(); j++) {
                     if (writer == null) {
                         dbWriters[j + k] = new DefaultDbWriterThread(conf, queue);
@@ -76,19 +75,6 @@ public final class JavaSpider {
                         );
                     }
                     dbWriters[j + k].start();
-=======
-                for (i = 0; i < conf.getConfigure().getWriteDbThreads(); i++) {
-                    if (writer == null) {
-                        dbWriters[i] = new DefaultDbWriterThread(conf, queue);
-                    } else {
-                        dbWriters[i] = ConfigKit.newConstructorInstance(
-                            ConfigKit.newConstructor(writer, Config.class, BlockingQueue.class),
-                            conf,
-                            queue
-                        );
-                    }
-                    dbWriters[i].start();
->>>>>>> branch 'master' of https://github.com/ewill/KaganSpider.git
                 }
                 
                 k += conf.getConfigure().getWriteDbThreads();

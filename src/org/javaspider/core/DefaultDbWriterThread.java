@@ -19,11 +19,7 @@ public class DefaultDbWriterThread extends AbstractWriterThread {
     private final List<PageInfo> buff;
     private volatile boolean closed = false;
     private static final short BUFF_SIZE = 10;
-<<<<<<< HEAD
     private static final int THREAD_SLEEP_TIME = 500;
-=======
-    private static final int THREAD_SLEEP_TIME = 100;
->>>>>>> branch 'master' of https://github.com/ewill/KaganSpider.git
     private static final Log log = LogFactory.getLog(DefaultDbWriterThread.class);
     
     public DefaultDbWriterThread(Config conf, BlockingQueue<PageInfo> queue) {

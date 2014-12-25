@@ -183,10 +183,6 @@ public final class DefaultIndexerThread extends AbstractIndexerThread {
                                 Thread.sleep(indexer.wc.getCatchPageTimeout());
                             }
                         }
-<<<<<<< HEAD
-=======
-                        Thread.sleep(indexer.wc.getCatchPageTimeout());
->>>>>>> branch 'master' of https://github.com/ewill/KaganSpider.git
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
